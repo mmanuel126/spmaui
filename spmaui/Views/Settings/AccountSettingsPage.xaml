@@ -1,0 +1,376 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:sp_maui.Controls"
+             xmlns:data="clr-namespace:sp_maui.ViewModels"
+             x:Class="sp_maui.Views.AccountSettingsPage"
+              xmlns:tabView="clr-namespace:Syncfusion.Maui.TabView;assembly=Syncfusion.Maui.TabView"
+             xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+             ios:Page.UseSafeArea="True" 
+             Title="Account Settings">
+
+    <ContentPage.BindingContext>
+        <data:SettingsAccountViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style x:Key="NameLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor" Value="Black" />
+            </Style>
+
+            <Style x:Key="LabelStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="TextColor" Value="Gray" />
+            </Style>
+
+            <Style x:Key="TitleLabelStyle" TargetType="Label">
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+
+            <Style x:Key="imageLableStackLayout" TargetType="StackLayout">
+                <Setter Property="Orientation" Value="Horizontal" />
+            </Style>
+
+
+            <Style x:Key="imageStyle" TargetType="Image">
+                <Setter Property="WidthRequest" Value="8" />
+                <Setter Property="HeightRequest" Value="8" />
+            </Style>
+
+            <Style x:Key="FrameCardViewStyle" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="5" />
+                <Setter Property="Margin" Value="5" />
+                <Setter Property="Padding" Value="5" />
+                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+                <Setter Property="BorderColor" Value="LightGray" />
+                <Setter Property="HasShadow" Value="True" />
+            </Style>
+
+            <Style x:Key="itemsCardViewStackLayoutStyle" TargetType="StackLayout">
+                <Setter Property="Margin" Value="5" />
+                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+                <Setter Property="Spacing" Value="8" />
+            </Style>
+
+            <Style x:Key="detailsStackLayout" TargetType="StackLayout">
+                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+                <Setter Property="VerticalOptions" Value="FillAndExpand" />
+                <Setter Property="Spacing" Value="2" />
+            </Style>
+
+            <Style x:Key="profileImageStyle" TargetType="Image">
+                <Setter Property="WidthRequest" Value="48" />
+                <Setter Property="HeightRequest" Value="48" />
+                <Setter Property="Aspect" Value="AspectFit" />
+            </Style>
+
+            <Style x:Key="profileImageFrameStyle" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="24" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="IsClippedToBounds" Value="True" />
+            </Style>
+
+            <Style x:Key="itemsInsideCardViewStackLayoutStyle" TargetType="StackLayout">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="8" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Shell.SearchHandler>
+        <controls:SPSearchHandler Placeholder="Search..."
+         ShowsResults="true"
+         DisplayMemberName="Name" />
+    </Shell.SearchHandler>
+
+    <StackLayout Spacing="0">
+
+        <tabView:SfTabView x:Name="tabASView" IndicatorBackground="Red" TabBarBackground="#E4E4E4" BackgroundColor="SeaShell" TabWidthMode="SizeToContent">
+            <tabView:SfTabView.Items>
+
+                <!-- photo change tab -->
+                <tabView:SfTabItem Header="Change Photo">
+                    <tabView:SfTabItem.Content>
+                        <StackLayout BackgroundColor="SeaShell" Padding="10">
+                            <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+                                <Frame>
+                                    <StackLayout>
+                                        <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}">
+                                            <Frame Style="{StaticResource profileImageFrameStyle}">
+                                                <Image x:Name="imgMyProfile" Style="{StaticResource profileImageStyle}" Source="{Binding MemberProfileBasicInfo.memProfileImage}" />
+                                            </Frame>
+                                            <StackLayout Style="{StaticResource detailsStackLayout}">
+                                                <Label x:Name="lblMyName"  Style="{StaticResource NameLabel}" />
+                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                    <Label x:Name="lblMyTitle"  Style="{StaticResource TitleLabelStyle}" />
+                                                </StackLayout>
+                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                    <Label Text="" Style="{StaticResource LabelStyle}" />
+                                                </StackLayout>
+                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                    <Label Text="" Style="{StaticResource LabelStyle}" />
+                                                </StackLayout>
+                                            </StackLayout>
+                                        </StackLayout>
+                                    </StackLayout>
+                                </Frame>
+                                <StackLayout Orientation="Vertical" Padding="30,24,30,24" Spacing="10">
+                                    <Button Margin="0,20,0,0" Text="Pick an Image"
+                                                    BackgroundColor="{StaticResource  Blue100Accent}" FontAttributes="Bold"
+                                                    Clicked="PickImage_Clicked" TextColor ="White" />
+                                    <Button Margin="0,20,0,0" Text="Capture an Image" x:Name="CaptureImage"
+                                                    BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                                    Clicked="CaptureImage_Clicked" TextColor ="White" />
+                                </StackLayout>
+                            </StackLayout>
+                        </StackLayout>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Change Name">
+                    <tabView:SfTabItem.Content>
+                        <StackLayout BackgroundColor="SeaShell" Padding="10">
+                            <StackLayout  Padding="0,12,0,0"              
+                                  Grid.Row="2"
+                                  VerticalOptions="Fill"
+                                  HorizontalOptions="Start"
+                                  Spacing="5">
+
+                                <StackLayout HorizontalOptions="Start" Spacing="1">
+                                    <Label Text="First Name:"  Style="{StaticResource LabelStyle}"></Label>
+                                    <Entry Text="{Binding AccountSettingsInfo[0].FirstName}" Keyboard="Text" x:Name="FirstName" Style="{StaticResource TextStyle}"  />
+                                </StackLayout>
+
+                                <StackLayout HorizontalOptions="Start" Spacing="1">
+                                    <Label Text="Middle Name:"  Style="{StaticResource LabelStyle}"></Label>
+                                    <Entry Text="{Binding AccountSettingsInfo[0].MiddleName}" Keyboard="Text" x:Name="MiddleName" Style="{StaticResource TextStyle}" />
+                                </StackLayout>
+                                <StackLayout HorizontalOptions="Start" Spacing="1">
+                                    <Label Text="Last Name:"  Style="{StaticResource LabelStyle}"></Label>
+                                    <Entry Text="{Binding AccountSettingsInfo[0].LastName}" Keyboard="Text" x:Name="LastName" Style="{StaticResource TextStyle}"  />
+                                </StackLayout>
+
+                                <StackLayout HorizontalOptions="Start" Orientation="Vertical" Padding="30,20,30,24" Spacing="10">
+                                    <Button Margin="0,0,0,0" Text="Save"
+                                     Clicked="ChangeNameButton_Clicked"
+                                     BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                     TextColor="White" />
+                                </StackLayout>
+                            </StackLayout>
+                        </StackLayout>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Change Password">
+                    <tabView:SfTabItem.Content>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+
+                            </StackLayout>
+                            <ScrollView Grid.Row="1">
+                                <StackLayout  Padding="0,12,0,0"              
+                                     Grid.Row="2"
+                                     VerticalOptions="Fill"
+                                     HorizontalOptions="Start"
+                                     Spacing="5">
+
+                                    <StackLayout Orientation="Vertical" Padding="10,12,10,12" Spacing="10">
+                                        <Label Text="Please follow the below guidelines when changing password: " FontSize="16" FontAttributes="Bold" Padding="0,0,0,0"/>
+                                        <Label Text="1. Your new password must be between 5-12 characters in length." FontSize="14"  Margin="0,0,0,0" />
+                                        <Label Text="2. Use a combination of letters, numbers, and punctuation." FontSize="14"  Margin="0,0,0,0" />
+                                        <Label Text="3. Passwords are case-sensitive. Remember to check your CAPS LOCK key." FontSize="14"  Margin="0,0,0,0" />
+                                    </StackLayout>
+
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,0,0">
+                                        <Label Text="Current Password:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Entry Text="" Keyboard="Text" IsPassword="True" x:Name="CurrentPassord" Style="{StaticResource TextStyle}"  />
+                                    </StackLayout>
+
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,0,0">
+                                        <Label Text="New Password:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Entry Text="" Keyboard="Text" IsPassword="True"  x:Name="NewPassword" Style="{StaticResource TextStyle}" />
+                                    </StackLayout>
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,0,0">
+                                        <Label Text="Confirm Password:"    Style="{StaticResource LabelStyle}"></Label>
+                                        <Entry Text="" Keyboard="Text" IsPassword="True"  x:Name="ConfirmPassword" Style="{StaticResource TextStyle}"  />
+                                    </StackLayout>
+
+                                    <StackLayout Orientation="Vertical" Padding="10,20,30,24" Spacing="10" HorizontalOptions="Start">
+                                        <Button Margin="0,0,0,0" Text="Save"
+                                        Clicked="ChangePwdButton_Clicked"
+                                        BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                        TextColor="White" />
+                                    </StackLayout>
+                                </StackLayout>
+                            </ScrollView>
+                        </Grid>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Security Questions">
+                    <tabView:SfTabItem.Content>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+
+                            </StackLayout>
+                            <ScrollView Grid.Row="1">
+                                <StackLayout  Padding="0,12,0,0"              
+                                    Grid.Row="2"
+                                    VerticalOptions="Fill"
+                                    HorizontalOptions="Start"
+                                    Spacing="5">
+
+                                    <StackLayout Orientation="Vertical" Padding="10,0,10,12" Spacing="10">
+                                        <Label Text="In case you ever needed our help (such as forgetting your password), we will use this to identify you as the account owner." FontSize="16"  Padding="0,0,0,0"/>
+                                    </StackLayout>
+
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,0,0">
+                                        <Label Text="Question:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Picker x:Name="Question" HorizontalOptions="FillAndExpand" TitleColor="Black"
+                                        Style="{StaticResource TextStyle}"
+                                        SelectedIndex="{Binding AccountSettingsInfo[0].SecurityQuestion}"
+                                        ItemsSource="{Binding SecQuestions}"
+                                        ItemDisplayBinding="{Binding Desc}">
+                                        </Picker>
+                                    </StackLayout>
+
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,0,0">
+                                        <Label Text="Answer:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Entry Text="{Binding AccountSettingsInfo[0].SecurityAnswer}" Keyboard="Text" x:Name="Answer" Style="{StaticResource TextStyle}" />
+                                    </StackLayout>
+
+                                    <StackLayout Orientation="Vertical" Padding="10,20,30,24" Spacing="10" HorizontalOptions="Start">
+                                        <Button Margin="0,0,0,0" Text="Save"
+                                        Clicked="SecQuestButton_Clicked"
+                                        BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                        TextColor="White" />
+                                    </StackLayout>
+                                </StackLayout>
+                            </ScrollView>
+                        </Grid>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Notifications">
+                    <tabView:SfTabItem.Content>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill"></StackLayout>
+                            <ScrollView Grid.Row="1">
+                                <StackLayout  Padding="0,12,0,0"              
+                                  Grid.Row="2"
+                                  VerticalOptions="Fill"
+                                  HorizontalOptions="Center"
+                                  Spacing="5">
+
+                                    <StackLayout Orientation="Vertical" Padding="10,12,10,12" Spacing="10">
+                                        <Label Text="We will notify you by email whenever actions that involve you are taken. Use this section to change these settings as necessary." FontSize="16"  Padding="0,0,0,0"/>
+                                    </StackLayout>
+                                    <StackLayout Padding="10,12,10,10" >
+                                        <Label x:Name="lblEmail" Text="You will be emailed at whenever someone:" FontSize="14" FontAttributes="Bold" Margin="0,0,0,0" />
+                                    </StackLayout>
+
+                                    <StackLayout Padding="12,2,0,0" HorizontalOptions="StartAndExpand" Orientation="Horizontal" Spacing="9">
+                                        <Label HorizontalOptions="StartAndExpand" VerticalOptions="Center" HorizontalTextAlignment="Start"  Text="Send you a message" FontSize="14"></Label>
+                                        <Switch x:Name="SendMessage" 
+                                          IsToggled="{Binding AccountSettingsNotifications.lG_SendMsg}" HorizontalOptions="EndAndExpand" />
+                                    </StackLayout>
+
+                                    <StackLayout Padding="12,2,0,0" HorizontalOptions="StartAndExpand" Orientation="Horizontal" Spacing="9">
+                                        <Label HorizontalOptions="StartAndExpand" VerticalOptions="Center" HorizontalTextAlignment="Start"  Text="Adds you as a connection" FontSize="14"></Label>
+                                        <Switch x:Name="AddAsContact"
+                                          IsToggled="{Binding AccountSettingsNotifications.lG_AddAsFriend}"
+                                          HorizontalOptions="EndAndExpand" />
+                                    </StackLayout>
+
+                                    <StackLayout Padding="12,2,0,0" HorizontalOptions="StartAndExpand" Orientation="Horizontal" Spacing="12">
+                                        <Label HorizontalOptions="StartAndExpand" VerticalOptions="Center" HorizontalTextAlignment="Start"  Text="Confirms a connection request" FontSize="14"></Label>
+                                        <Switch x:Name="ContactRequest"
+                                          IsToggled="{Binding AccountSettingsNotifications.lG_ConfirmFriendShipRequest}"
+                                          HorizontalOptions="EndAndExpand" />
+                                    </StackLayout>
+
+                                    <StackLayout Padding="12,2,0,0" HorizontalOptions="StartAndExpand" Orientation="Horizontal" Spacing="12">
+                                        <Label HorizontalOptions="StartAndExpand" VerticalOptions="Center" HorizontalTextAlignment="Start"  Text="Repliies to your help questions" FontSize="14"></Label>
+                                        <Switch x:Name="HelpQuestions"
+                                          IsToggled="{Binding AccountSettingsNotifications.hE_RepliesToYourHelpQuest}"
+                                          HorizontalOptions="EndAndExpand" />
+                                    </StackLayout>
+
+                                    <StackLayout Orientation="Vertical" Padding="10,20,30,24" Spacing="10" HorizontalOptions="Start">
+                                        <Button Margin="0,0,0,0" Text="Save"
+                                            Clicked="SaveNotificationsButton_Clicked"
+                                            BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                            TextColor="White" />
+                                    </StackLayout>
+                                    
+                                </StackLayout>
+                            </ScrollView>
+                        </Grid>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+                <tabView:SfTabItem Header="Deactivate">
+                    <tabView:SfTabItem.Content>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackLayout BackgroundColor="{StaticResource Accent}" VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+
+                            </StackLayout>
+                            <ScrollView Grid.Row="1">
+                                <StackLayout  Padding="0,12,0,0"              
+                                    Grid.Row="2"
+                                    VerticalOptions="Fill"
+                                    HorizontalOptions="Start"
+                                    Spacing="5">
+
+                                    <StackLayout Padding="10,0,10,12" HorizontalOptions="Start" Spacing="1">
+                                        <Label Text="Select reason for deactivating account:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Picker x:Name="Reason" HorizontalOptions="FillAndExpand" TitleColor="Black" 
+                                            Style="{StaticResource TextStyle}" 
+                                            ItemsSource="{Binding DeactivationReasons}"
+                                            ItemDisplayBinding="{Binding Desc}">
+                                        </Picker>
+                                    </StackLayout>
+
+                                    <StackLayout HorizontalOptions="Start" Spacing="1" Padding="10,0,10,12">
+                                        <Label Text="Further explanation:"  Style="{StaticResource LabelStyle}"></Label>
+                                        <Entry Text="" Keyboard="Text" x:Name="Explanation" Style="{StaticResource TextStyle}" />
+                                    </StackLayout>
+
+                                    <StackLayout Orientation="Vertical" Padding="10,20,30,24" Spacing="10" HorizontalOptions="Start">
+                                        <Button Margin="0,0,0,0" Text="Deactivate"
+                                            Clicked="DeactivateButton_Clicked"
+                                            BackgroundColor="{StaticResource Blue100Accent}" FontAttributes="Bold"
+                                            TextColor="White" />
+                                    </StackLayout>
+                                </StackLayout>
+                            </ScrollView>
+                        </Grid>
+                    </tabView:SfTabItem.Content>
+                </tabView:SfTabItem>
+
+            </tabView:SfTabView.Items>
+        </tabView:SfTabView>
+
+    </StackLayout>
+</ContentPage>
