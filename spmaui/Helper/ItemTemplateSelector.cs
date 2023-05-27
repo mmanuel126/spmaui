@@ -11,16 +11,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Xamarin.Forms;
-//using SampleBrowser.Core;
-using Xamarin.Forms.Internals;
-using Syncfusion.TreeView.Engine;
+using Android.Runtime;
+using TreeView.Maui.Core;
 
-namespace sp_mobile.Helper
+namespace spmaui.Helper
 {
-    [Preserve(AllMembers = true)]
     #region MessageTemplateSelector
-    public class ItemTemplateSelector : Xamarin.Forms.DataTemplateSelector
+    public class ItemTemplateSelector : DataTemplateSelector
     {
         #region Properties
         public DataTemplate ConversationTemplate { get; set; }
@@ -38,10 +35,10 @@ namespace sp_mobile.Helper
 
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
-            var node = item as TreeViewNode;
-            var level = node.Level;
-            if (level == 0)
-                return ConversationTemplate;
+           // var node = item as TreeViewNode;
+           // var level = node.;
+           // if (level == 0)
+            //    return ConversationTemplate;
             return ReplyTemplate;
         }
         #endregion

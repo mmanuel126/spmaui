@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Windows.Input;
-using sp_maui.Views;
+using spmaui.Views;
+using YoutubeExplode;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
-    public class ProfileVideoPlayerViewModel: BaseViewModel
+    public class ProfileVideoPlayerViewModel : BaseViewModel
     {
-
         private string selectedVideo;
-
         public string SelectedVideo
         {
             get { return selectedVideo; }
@@ -21,8 +20,9 @@ namespace sp_maui.ViewModels
 
         public ProfileVideoPlayerViewModel()
         {
+            var youtube = new YoutubeClient();
             string id = Preferences.Get("YoutubeVideoID", "");
-            SelectedVideo = "https://www.youtube.com/watch?v=" + id;
+            SelectedVideo = "https://youtube.com/watch?v=" + id;
         }
     }
 }

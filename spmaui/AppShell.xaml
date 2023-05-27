@@ -3,13 +3,168 @@
     x:Class="spmaui.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:spmaui"
-    Shell.FlyoutBehavior="Disabled">
+    xmlns:controls="clr-namespace:spmaui.Controls"
+    FlyoutBackgroundImageAspect="AspectFill" 
+    FlyoutHeaderBehavior="CollapseOnScroll"
+    xmlns:views="clr-namespace:spmaui.Views"
+    xmlns:conViews="clr-namespace:spmaui.Views.Connection"
+    Shell.NavBarIsVisible="True">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.BackgroundColor>White</Shell.BackgroundColor>
+    <Shell.TitleColor>Red</Shell.TitleColor>
+    <Shell.ForegroundColor>Black</Shell.ForegroundColor>
+
+    <Shell.TabBarForegroundColor>Red</Shell.TabBarForegroundColor>
+    <Shell.TabBarTitleColor>Black</Shell.TabBarTitleColor>
+    
+
+    <Shell.FlyoutBackdrop>
+        <LinearGradientBrush StartPoint="0,0"
+                             EndPoint="1,1">
+            <GradientStop Color="DarkGray"
+                          Offset="0.1" />
+            <GradientStop Color="Gray"
+                          Offset="0.6" />
+            <GradientStop Color="LightGray"
+                          Offset="1.0" />
+        </LinearGradientBrush>
+    </Shell.FlyoutBackdrop>
+
+    <Shell.Resources>
+        <ResourceDictionary>
+            <Style x:Key="BaseStyle" TargetType="Element">
+                <Setter Property="Shell.BackgroundColor" Value="Black" />
+                <Setter Property="Shell.ForegroundColor" Value="Black" />
+                <Setter Property="Shell.TitleColor" Value="Black" />
+                <Setter Property="Shell.DisabledColor" Value="#B4FFFFFF" />
+                <Setter Property="Shell.UnselectedColor" Value="White" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="WhiteSmoke" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="White"/>
+                <Setter Property="Shell.TabBarUnselectedColor" Value="#95FFFFFF"/>
+                <Setter Property="Shell.TabBarTitleColor" Value="White"/>
+            </Style>
+
+            <Style TargetType="ShellItem"
+               BasedOn="{StaticResource BaseStyle}" />
+
+            <Style x:Key="NewsShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="White" />
+            </Style>
+
+            <Style x:Key="TabShellStyle"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="ConnectionsShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="SearchShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="MessengerShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="ProfileShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="SettingsShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#f7f9fa" />
+            </Style>
+
+            <Style x:Key="AboutShell"
+               TargetType="Element"
+               BasedOn="{StaticResource BaseStyle}">
+                <Setter Property="Shell.BackgroundColor"
+                    Value="#96d1ff" />
+            </Style>
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <Shell.FlyoutHeader>
+        <controls:FlyoutHeader />
+    </Shell.FlyoutHeader>
+
+    <Shell.FlyoutFooter>
+        <controls:FlyoutFooter></controls:FlyoutFooter>
+    </Shell.FlyoutFooter>
+
+    <FlyoutItem Title="SportProfiles" FlyoutDisplayOptions="AsMultipleItems" >
+        <Tab Title="News" 
+             Icon="news.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:NewsPage}" />
+        </Tab>
+
+        <Tab Title="Posts" 
+             Icon="postv2.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:PostsPage}" />
+        </Tab>
+
+        <Tab Title="Connections" 
+             Icon="profilev2.png">
+            <ShellContent  ContentTemplate="{DataTemplate conViews:ConnectionTabsPage}" />
+        </Tab>
+
+        <Tab Title="Search" 
+             Icon="search100.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:SearchPage}" />
+        </Tab>
+
+        <Tab Title="Messages" 
+             Icon="messengerv2.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:MessagePage}" />
+        </Tab>
+
+        <Tab Title="View My Profile" FlyoutItemIsVisible="True"
+             Icon="profilev2.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:ProfilePage}" />
+        </Tab>
+
+        <Tab Title="Edit My Profile" FlyoutItemIsVisible="False"
+             Icon="editprofile7.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:ProfileEditPage}" />
+        </Tab>
+
+        <Tab Title="Account Settings" FlyoutItemIsVisible="False"
+             Icon="actsettings2.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:AccountSettingsPage}" />
+        </Tab>
+
+        <Tab Title="Privacy Settings" FlyoutItemIsVisible="False"
+             Icon="privacy3.png">
+            <ShellContent x:Name="privacyset"  ContentTemplate="{DataTemplate views:PrivacySettingsPage}" />
+        </Tab>
+
+        <Tab Title="Logout" FlyoutItemIsVisible="False"
+             Icon="logoff3.png">
+            <ShellContent  ContentTemplate="{DataTemplate views:LogoutPage}" />
+        </Tab>
+
+    </FlyoutItem>
 
 </Shell>
 

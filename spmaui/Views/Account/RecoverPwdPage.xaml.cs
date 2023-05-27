@@ -4,13 +4,13 @@ using spmaui.ViewModels;
 
 public partial class RecoverPwdPage : ContentPage
 {
-     MemberViewModel vm;
-    public RecoverPwdPage()
+    private readonly MemberViewModel _memberViewModel;
+
+    public RecoverPwdPage(MemberViewModel memberViewModel)
 	{
 		InitializeComponent();
-
-        this.Title = App.AppSettings.AppName;
-        vm = new MemberViewModel();
+        _memberViewModel = memberViewModel;
+        this.BindingContext = memberViewModel;
 
         //when you touch login label
         var login_tap = new TapGestureRecognizer();
@@ -20,8 +20,8 @@ public partial class RecoverPwdPage : ContentPage
 
     private async void Login_tap_Tapped(object sender, EventArgs e)
     {
-        var LoginPage = new LoginPage();
-        await Navigation.PushModalAsync(new NavigationPage(LoginPage));
+        var LoginPage = new LoginPage(_memberViewModel);
+        await Navigation.PushModalAsync(LoginPage);
     }
 
     private async void ResetPwdButton_Clicked(object sender, EventArgs e)
@@ -41,9 +41,9 @@ public partial class RecoverPwdPage : ContentPage
                 ai.IsRunning = true;
 
                 //call service via vm and do things
-                await vm.ResetPassword(EmailText.Text, "");
+                await _memberViewModel.ResetPassword(EmailText.Text);
                 Preferences.Set("ResetPwdEmail",EmailText.Text);
-                var resetPwdPage = new ResetPasswordPage();
+                var resetPwdPage = new ResetPasswordPage(_memberViewModel);
                 await Navigation.PushModalAsync(new NavigationPage(resetPwdPage));
                 aiLayout.IsVisible = false;
             }

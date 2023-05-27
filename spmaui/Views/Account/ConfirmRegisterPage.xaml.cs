@@ -1,11 +1,16 @@
-﻿namespace spmaui.Views.Account;
+﻿using spmaui.ViewModels;
+
+namespace spmaui.Views.Account;
 
 public partial class ConfirmRegisterPage : ContentPage
 {
-	public ConfirmRegisterPage()
+    private readonly MemberViewModel _memberViewModel;
+
+	public ConfirmRegisterPage(MemberViewModel memberViewModel)
 	{
 		InitializeComponent();
-        this.Title = App.AppSettings.AppName;
+        _memberViewModel = memberViewModel;
+        this.BindingContext = memberViewModel;
 
         string compName = App.AppSettings.AppName;
         string email = Preferences.Get("RegisteredEmail","");
@@ -23,7 +28,7 @@ public partial class ConfirmRegisterPage : ContentPage
 
     private async void register_confirm_tap_Tapped(object sender, EventArgs e)
     {
-        var loginPage = new LoginPage();
-        await Navigation.PushModalAsync(new NavigationPage(loginPage));
+        var loginPage = new LoginPage(_memberViewModel);
+        await Navigation.PushModalAsync(loginPage);
     }
 }

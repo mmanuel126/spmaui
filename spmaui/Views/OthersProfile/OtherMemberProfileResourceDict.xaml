@@ -12,40 +12,29 @@
 
             <Style x:Key="LabelStyle" TargetType="Label">
                 <Setter Property="FontSize" Value="14" />
-                <Setter Property="FontAttributes" Value="Bold"></Setter>
-                <Setter Property="TextColor" Value="DarkSlateGray" />
-                <Setter Property="WidthRequest" Value="330"></Setter>
-            </Style>
-
-            <Style x:Key="TextStyle" TargetType="Label">
-                <Setter Property="FontSize" Value="16" />
-                <Setter Property="WidthRequest" Value="330"></Setter>
-            </Style>
-
-            <Style x:Key="LabelStyle2" TargetType="Label">
-                <Setter Property="FontSize" Value="14" />
                 <Setter Property="TextColor" Value="Gray" />
             </Style>
 
             <Style x:Key="TitleLabelStyle" TargetType="Label">
                 <Setter Property="FontAttributes" Value="Bold" />
-                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontSize" Value="13" />
             </Style>
 
             <Style x:Key="imageLableStackLayout" TargetType="StackLayout">
                 <Setter Property="Orientation" Value="Horizontal" />
             </Style>
 
-
             <Style x:Key="imageStyle" TargetType="Image">
                 <Setter Property="WidthRequest" Value="8" />
                 <Setter Property="HeightRequest" Value="8" />
             </Style>
+
             <Style x:Key="FrameCardViewStyle" TargetType="Frame">
                 <Setter Property="CornerRadius" Value="5" />
                 <Setter Property="Margin" Value="5" />
                 <Setter Property="Padding" Value="5" />
                 <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+
                 <Setter Property="BorderColor" Value="LightGray" />
                 <Setter Property="HasShadow" Value="True" />
             </Style>

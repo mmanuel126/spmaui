@@ -5,19 +5,17 @@
 // licensing@syncfusion.com. Any infringement will be prosecuted under
 // applicable laws. 
 #endregion
-using sp_mobile.Models;
-using Syncfusion.TreeView.Engine;
+using Android.Runtime;
+using spmaui.Models;
+//using Syncfusion.TreeView.Engine;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
-using Xamarin.Forms;
-using Xamarin.Forms.Internals;
 
-namespace sp_mobile.Helper
+namespace spmaui.Helper
 {
-    [Preserve(AllMembers = true)]
     public class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -48,7 +46,6 @@ namespace sp_mobile.Helper
         }
     }
 
-    [Preserve(AllMembers = true)]
     public class RepliesTextConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -63,7 +60,6 @@ namespace sp_mobile.Helper
         }
     }
 
-    [Preserve(AllMembers = true)]
     public class RepliesCountConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

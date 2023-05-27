@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class LogoutPage : ContentPage
 {
@@ -17,6 +17,6 @@ public partial class LogoutPage : ContentPage
         Preferences.Set("UserName", null);
         Preferences.Set("UserTitle", null);
         Preferences.Set("AccessToken", null);
-        App.Current.MainPage = new sp_maui.Views.Account.LoginPage();
+        App.Current.MainPage = new spmaui.Views.Account.LoginPage(new MemberViewModel (new Services.Members()));
     }
 }

@@ -1,19 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:sp_maui.Controls"
-             xmlns:data="clr-namespace:sp_maui.ViewModels"
-             x:Class="sp_maui.Views.ProfilePage"
+             xmlns:controls="clr-namespace:spmaui.Controls"
+             xmlns:data="clr-namespace:spmaui.ViewModels"
+             x:Class="spmaui.Views.ProfilePage"
              xmlns:tabView="clr-namespace:Syncfusion.Maui.TabView;assembly=Syncfusion.Maui.TabView"
              xmlns:core="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
              xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              ios:Page.UseSafeArea="True" 
              Title="Profile">
 
-    <ContentPage.BindingContext>
-        <data:ProfileViewModel/>
-    </ContentPage.BindingContext>
-
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="refreshProfile"  IconImageSource="refresh.png" Clicked="OnRefreshProfile_Clicked"  />
+    </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -24,13 +23,13 @@
             </Style>
 
             <Style x:Key="LabelStyle" TargetType="Label">
-                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontSize" Value="12" />
                 <Setter Property="TextColor" Value="Gray" />
             </Style>
 
             <Style x:Key="TitleLabelStyle" TargetType="Label">
                 <Setter Property="FontAttributes" Value="Bold" />
-                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontSize" Value="12" />
             </Style>
 
             <Style x:Key="imageLableStackLayout" TargetType="StackLayout">
@@ -65,7 +64,6 @@
                 <Setter Property="Spacing" Value="2" />
             </Style>
 
-
             <Style x:Key="profileImageStyle" TargetType="Image">
                 <Setter Property="WidthRequest" Value="48" />
                 <Setter Property="HeightRequest" Value="48" />
@@ -88,314 +86,341 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Shell.SearchHandler>
-        <controls:SPSearchHandler Placeholder="Search..."
-         ShowsResults="true"
-         DisplayMemberName="Name" />
-    </Shell.SearchHandler>
+    <AbsoluteLayout>
+        <StackLayout Spacing="0" BackgroundColor="WhiteSmoke"
+            AbsoluteLayout.LayoutBounds="0,0,1,1"
+            AbsoluteLayout.LayoutFlags="All">
 
-    <StackLayout Spacing="0">
-
-        <Frame BackgroundColor="White">
-            <StackLayout>
-                <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}">
-                    <Frame Style="{StaticResource profileImageFrameStyle}">
-                        <Image x:Name="imgProfile" Style="{StaticResource profileImageStyle}" Source="{Binding MemberProfileBasicInfo.memProfileImage}" />
-                    </Frame>
-                    <StackLayout Style="{StaticResource detailsStackLayout}">
-                        <Label x:Name="lblName"  Style="{StaticResource NameLabel}" />
-                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                            <Label x:Name="lblTitle"  Style="{StaticResource TitleLabelStyle}" />
-                        </StackLayout>
-                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                            <Label Text="" Style="{StaticResource LabelStyle}" />
-                        </StackLayout>
-                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                            <Label Text="" Style="{StaticResource LabelStyle}" />
+            <Frame BackgroundColor="White">
+                <StackLayout>
+                    <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}">
+                        <Frame Style="{StaticResource profileImageFrameStyle}">
+                            <Image x:Name="imgProfile" Style="{StaticResource profileImageStyle}" Source="{Binding MemberProfileBasicInfo.memProfileImage}" />
+                        </Frame>
+                        <StackLayout Style="{StaticResource detailsStackLayout}">
+                            <Label x:Name="lblName"  Style="{StaticResource NameLabel}" />
+                            <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                <Label x:Name="lblTitle"  Style="{StaticResource TitleLabelStyle}" />
+                            </StackLayout>
+                            <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                <Label Text="" Style="{StaticResource LabelStyle}" />
+                            </StackLayout>
+                            <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                <Label Text="" Style="{StaticResource LabelStyle}" />
+                            </StackLayout>
                         </StackLayout>
                     </StackLayout>
                 </StackLayout>
-            </StackLayout>
-        </Frame>
+            </Frame>
 
-        <tabView:SfTabView x:Name="tabView" IndicatorBackground="Red" TabBarBackground="#E4E4E4" BackgroundColor="White" TabWidthMode="SizeToContent">
-            <tabView:SfTabView.Items>
+            <!-- content layout -->
 
-                <tabView:SfTabItem Header="Basic Info.">
-                    <tabView:SfTabItem.Content>
-                        <core:SfBusyIndicator IsRunning="True">
-                        <ScrollView  Orientation="Vertical">
+            <tabView:SfTabView x:Name="tabView" IndicatorBackground="Red" TabBarBackground="#E4E4E4" BackgroundColor="White" TabWidthMode="SizeToContent">
+                <tabView:SfTabView.Items>
+
+                    <tabView:SfTabItem Header="Basic Info." >
+                        <tabView:SfTabItem.Content>
+
+                            <Grid RowDefinitions="*, *" RowSpacing="0">
+                                <!-- ScrollView x:Name="biView" Grid.Row="0" VerticalOptions="Fill" -->
+
+                                <StackLayout BackgroundColor="White" Padding="10" Spacing="10">
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Sport: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.Sport}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Current Status: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.CurrentStatus}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Preferred Hand/Foot: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.LeftRightHandFoot}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Preferred Position: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.PreferredPosition}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Secondary Position: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.SecondaryPosition}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Height: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.Height}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Weight: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.Weight}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Gender: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.Sex}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label  Padding="0,0,0,0">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Birth Date: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.memProfileDOB}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+
+                                    <Label  Padding="0,0,0,0" >
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <FormattedString.Spans>
+                                                    <Span TextColor="#4A6792" Text="Looking For: "/>
+                                                    <Span Text="{Binding ProfileBasicInfo.memProfileLookingFor}"/>
+                                                </FormattedString.Spans>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </StackLayout>
+
+                                <!-- /ScrollView -->
+                            </Grid>
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
+
+                    <tabView:SfTabItem Header="Biography">
+                        <tabView:SfTabItem.Content>
+
+                            <ScrollView  Orientation="Vertical" HeightRequest="800">
+                                <StackLayout Spacing="0">
+
+                                    <Grid BackgroundColor="White" x:Name="BioInfoGrid">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+
+                                        <StackLayout Orientation="Vertical" Padding="10,0,10,0" Spacing="0" HorizontalOptions="StartAndExpand" >
+                                            <Label Padding="0,0,0,0"
+                                                   Text="{Binding ProfileBasicInfo.Bio}" >
+                                            </Label>
+                                        </StackLayout>
+                                    </Grid>
+                                </StackLayout>
+                            </ScrollView>
+
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
+
+                    <tabView:SfTabItem Header="Contact Info." >
+                        <tabView:SfTabItem.Content>
+
+                            <!-- ScrollView  Orientation="Vertical" HeightRequest="450" -->
                             <StackLayout Spacing="0">
-                                <Grid BackgroundColor="White" x:Name="BasicInfoGrid">
+                                <Grid BackgroundColor="White" x:Name="ContactInfoGrid">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
-                                    <StackLayout Orientation="Vertical" Padding="10,10,10,10" Spacing="13">
-                                        <Label FontSize="16" Padding="0,0,0,0">
+                                    <StackLayout BackgroundColor="White" Orientation="Vertical" Spacing = "13" Padding="10">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Sport: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.Sport}"/>
+                                                        <Span TextColor="#4A6792" Text="Email: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Email}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Current Status: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.CurrentStatus}"/>
+                                                        <Span TextColor="#4A6792" Text="Other Email: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.OtherEmail}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Preferred Hand/Foot: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.LeftRightHandFoot}"/>
+                                                        <Span TextColor="#4A6792" Text="Facebook: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Facebook}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Preferred Position: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.PreferredPosition}"/>
+                                                        <Span TextColor="#4A6792" Text="Instagram: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Instagram}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Secondary Position: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.SecondaryPosition}"/>
+                                                        <Span TextColor="#4A6792" Text="Twitter Handle: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Twitter}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Height: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.Height}"/>
+                                                        <Span TextColor="#4A6792" Text="Website URL: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Website}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Weight: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.Weight}"/>
+                                                        <Span TextColor="#4A6792" Text="Cell Phone: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.CellPhone}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Gender: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.Sex}"/>
+                                                        <Span TextColor="#4A6792" Text="Home Phone: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.HomePhone}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Birth Date: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.memProfileDOB}"/>
+                                                        <Span TextColor="#4A6792" Text="Address: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Address}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
-                                        <Label FontSize="16" Padding="0,0,0,0">
+
+                                        <Label  Padding="0,0,0,0">
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <FormattedString.Spans>
-                                                        <Span TextColor="#4A6792" Text="Looking For: "/>
-                                                        <Span Text="{Binding ProfileBasicInfo.memProfileLookingFor}"/>
+                                                        <Span TextColor="#4A6792" Text="City: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.City}"/>
                                                     </FormattedString.Spans>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>
+
+                                        <Label  Padding="0,0,0,0">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <FormattedString.Spans>
+                                                        <Span TextColor="#4A6792" Text="State: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.State}"/>
+                                                    </FormattedString.Spans>
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+
+                                        <Label  Padding="0,0,0,0">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <FormattedString.Spans>
+                                                        <Span TextColor="#4A6792" Text="Zip Code: "/>
+                                                        <Span Text="{Binding ProfileContactInfo.Zip}"/>
+                                                    </FormattedString.Spans>
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+
                                     </StackLayout>
                                 </Grid>
                             </StackLayout>
-                        </ScrollView>
-                      </core:SfBusyIndicator>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
+                            <!-- /ScrollView -->
 
-                <tabView:SfTabItem Header="Biography">
-                    <tabView:SfTabItem.Content>
-                        <ScrollView  Orientation="Vertical">
-                            <Grid BackgroundColor="White" x:Name="biographyGrid">
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
+
+                    <tabView:SfTabItem Header="Education">
+                        <tabView:SfTabItem.Content>
+
+                            <Grid BackgroundColor="White" x:Name="educationGrid" VerticalOptions="FillAndExpand">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <StackLayout Orientation="Vertical" Padding="10,10,10,10" Spacing="10">
-                                    <Label Text="{Binding ProfileBasicInfo.Bio}" FontSize="16" Padding="0,0,0,0"/>
-                                </StackLayout>
-                            </Grid>
-                        </ScrollView>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
+                                <StackLayout BackgroundColor="White" Orientation="Vertical" Spacing = "13" Padding="0">
 
-                <tabView:SfTabItem Header="Contact Info." >
-                    <tabView:SfTabItem.Content>
-
-                        <Grid Margin="10" RowDefinitions="Auto,*,Auto">
-
-                            <ScrollView x:Name="scrollView" Grid.Row="1" VerticalOptions="FillAndExpand">
-                                <StackLayout BackgroundColor="White">
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Email: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Email}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Other Email: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.OtherEmail}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Facebook: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Facebook}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Instagram: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Instagram}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Twitte Handle: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Twitter}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Website: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Website}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Cell Phone: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.CellPhone}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Home Phone: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.HomePhone}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Address: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Address}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="City: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.City}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="State: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.State}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Label FontSize="16" Padding="0,0,0,13">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <FormattedString.Spans>
-                                                    <Span TextColor="#4A6792" Text="Zip: "/>
-                                                    <Span Text="{Binding ProfileContactInfo.Zip}"/>
-                                                </FormattedString.Spans>
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-
-                                </StackLayout>
-                            </ScrollView>
-                        </Grid>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
-
-                <tabView:SfTabItem Header="Education">
-                    <tabView:SfTabItem.Content>
-                        <Grid BackgroundColor="White" x:Name="EducationGrid">
-
-                            <!-- pull:SfPullToRefresh x:Name="pulltorefresh"
+                                    <!-- pull:SfPullToRefresh x:Name="pulltorefresh"
                                     TransitionMode="Push" 
                                     PullingThreshold="100" 
                                     RefreshContentHeight="30"
@@ -406,77 +431,79 @@
                                     RefreshContentWidth="30">
                                 <pull:SfPullToRefresh.PullableContent -->
 
-                            <CollectionView ItemsSource="{Binding ProfileEducation}"
-                                  x:Name="collectionView" SelectionChanged="OnEducationSelectionChanged"
-                                  Margin="10"                    
-                                  SelectionMode="Single" >
+                                    <CollectionView ItemsSource="{Binding ProfileEducation}" HeightRequest="500"
+                                        x:Name="collectionView" SelectionChanged="OnEducationSelectionChanged"               
+                                        SelectionMode="Single">
 
-                                <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Vertical" />
-                                </CollectionView.ItemsLayout>
+                                        <CollectionView.ItemsLayout>
+                                            <LinearItemsLayout Orientation="Vertical" />
+                                        </CollectionView.ItemsLayout>
 
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackLayout Spacing="8" Padding="10,10,10,10">
-                                            <!-- Frame -->
-                                            <StackLayout>
-                                                <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}">
-                                                    <Frame Style="{StaticResource profileImageFrameStyle}">
-                                                        <Image Style="{StaticResource profileImageStyle}" Source="{Binding schoolImage}" />
-                                                    </Frame>
-                                                    <StackLayout Style="{StaticResource detailsStackLayout}">
-                                                        <Label Text="{Binding schoolName}" Style="{StaticResource NameLabel}" />
-                                                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                                                            <Label Text="{Binding schoolAddress}" Style="{StaticResource TitleLabelStyle}" />
-                                                        </StackLayout>
-                                                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                                                            <Label Text="{Binding major}" Style="{StaticResource LabelStyle}" />
-                                                        </StackLayout>
-                                                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                                                            <Label Text="{Binding degree}" Style="{StaticResource LabelStyle}" />
-                                                        </StackLayout>
-                                                        <StackLayout Style="{StaticResource imageLableStackLayout}">
-                                                            <Label Text="{Binding sportLevelType}" Style="{StaticResource LabelStyle}" />
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackLayout Spacing="6" Padding="5,5,5,5">
+                                                    <Frame HeightRequest="132">
+                                                    <StackLayout>
+                                                        <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}">
+                                                            <Frame Style="{StaticResource profileImageFrameStyle}">
+                                                                <Image Style="{StaticResource profileImageStyle}" Source="{Binding schoolImage}" />
+                                                            </Frame>
+                                                            <StackLayout Style="{StaticResource detailsStackLayout}">
+                                                                <Label Text="{Binding schoolName}" Style="{StaticResource NameLabel}" />
+                                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                                    <Label Text="{Binding schoolAddress}" Style="{StaticResource TitleLabelStyle}" />
+                                                                </StackLayout>
+                                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                                    <Label Text="{Binding major}" Style="{StaticResource LabelStyle}" />
+                                                                </StackLayout>
+                                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                                    <Label Text="{Binding degree}" Style="{StaticResource LabelStyle}" />
+                                                                </StackLayout>
+                                                                <StackLayout Style="{StaticResource imageLableStackLayout}">
+                                                                    <Label Text="{Binding sportLevelType}" Style="{StaticResource LabelStyle}" />
+                                                                </StackLayout>
+                                                            </StackLayout>
                                                         </StackLayout>
                                                     </StackLayout>
+                                                    </Frame>
                                                 </StackLayout>
-                                            </StackLayout>
-                                            <!-- /Frame-->
-                                            <BoxView HeightRequest="1" BackgroundColor="LightGray" VerticalOptions="End"/>
-                                        </StackLayout>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                            <!-- /pull:SfPullToRefresh.PullableContent>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                    <!-- /pull:SfPullToRefresh.PullableContent>
                             </pull:SfPullToRefresh -->
-                        </Grid>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
-
-                <tabView:SfTabItem Header="Photos">
-                    <tabView:SfTabItem.Content>
-                        <Grid BackgroundColor="White" x:Name="photosGrid">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <ScrollView Grid.Row="1">
-                                <StackLayout Orientation="Vertical" Padding="10,10,10,10" Spacing="10">
-                                    <Label Text="This app uses a member's public Instagram posts to display their public images to showcase their talents." FontSize="16" Padding="0,0,0,0" />
-                                    <Label Text="It assumes you have an account and you have set your instagram link address in the app's settings section." FontSize="16" Padding="0,0,0,0"/>
-                                    <Label Text="To view the photos,Tap the button below to get redirected to Instagram." FontSize="16" Padding="0,0,0,0"/>
-                                    <Button Margin="0,10,0,0" Text="View Profiler's Photos" BackgroundColor="{StaticResource Blue100Accent}" Clicked="OnPhotosButtonClicked" TextColor="White" FontAttributes="Bold" FontSize="15" />
                                 </StackLayout>
-                            </ScrollView>
-                        </Grid>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
+                            </Grid>
 
-                <tabView:SfTabItem Header="Videos">
-                    <tabView:SfTabItem.Content>
-                        <Grid BackgroundColor="White">
-                            <!-- pull:SfPullToRefresh x:Name="pulltorefresh"
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
+
+                    <tabView:SfTabItem Header="Photos">
+                        <tabView:SfTabItem.Content>
+
+                            <Grid BackgroundColor="White" x:Name="photosGrid">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <ScrollView Grid.Row="1">
+                                    <StackLayout Orientation="Vertical" Padding="10,10,10,0" Spacing="10">
+                                        <Label Text="This app uses a member's public Instagram posts to display their public images to showcase their talents." />
+                                        <Label Text="It assumes you have an account and you have set your instagram link address in the app's settings section." />
+                                        <Label Text="To view the photos,Tap the button below to get redirected to Instagram."/>
+                                        <Button Margin="10,10,10,10" Text="View Profiler's Photos" BackgroundColor="{StaticResource Blue100Accent}" Clicked="OnPhotosButtonClicked" TextColor="White" FontAttributes="Bold" FontSize="15" />
+                                    </StackLayout>
+                                </ScrollView>
+                            </Grid>
+
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
+
+                    <tabView:SfTabItem Header="Videos">
+                        <tabView:SfTabItem.Content>
+
+                            <Grid BackgroundColor="White" RowDefinitions="*" ColumnDefinitions="*">
+                                <!-- pull:SfPullToRefresh x:Name="pulltorefresh"
                            TransitionMode="Push" 
                            PullingThreshold="100" 
                            RefreshContentHeight="30"
@@ -487,53 +514,75 @@
                            RefreshContentWidth="30">
                                 <pull:SfPullToRefresh.PullableContent -->
 
-                            <CollectionView ItemsSource="{Binding Playlist}"  BackgroundColor="White"
-                                 x:Name="collectionViewVideos" Margin="10" SelectionMode="Single" 
-                                 SelectionChanged="OnVideoSelectionChanged">
+                                <CollectionView ItemsSource="{Binding Playlist}"  BackgroundColor="White" 
+                                        x:Name="collectionViewVideos" Margin="0" SelectionMode="Single"
+                                                    SelectionChanged="OnVideoSelectionChanged"
+                                                    Grid.Row="0" Grid.Column="0"
+                                                    >
 
-                                <CollectionView.Header >
-                                    <Grid>
-                                        <Label Margin="10,10,10,10" Text="We use a member's public youtube playlists to show and play their showcase videos. Tap a playlist below to view its videos:"/>
-                                    </Grid>
-                                </CollectionView.Header>
-
-                                <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" >
-                                    </LinearItemsLayout>
-                                </CollectionView.ItemsLayout>
-
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Padding="10,10,10,10">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition></RowDefinition>
-                                            </Grid.RowDefinitions>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition></ColumnDefinition>
-                                            </Grid.ColumnDefinitions>
-                                            <StackLayout Padding="0,0,10,0" VerticalOptions="Center">
-                                                <Image Source="{Binding DefaultThumbnail}" 
-                                                 Aspect="AspectFill" HeightRequest="200"  WidthRequest="300" />
-                                                <Label Text="{Binding Title}" TextColor="Blue" FontSize="15"
-                                                   FontAttributes="None" />
-                                                <Label Text="{Binding Description}" TextColor="Gray" FontSize="14"  Margin="0, 0, 0, 7"
-                                                   FontAttributes="None" VerticalOptions="End" />
-                                            </StackLayout>
-                                            <!-- Separator -->
-                                            <BoxView HeightRequest="2" BackgroundColor="LightGray" VerticalOptions="End"/>
+                                    <CollectionView.Header >
+                                        <Grid>
+                                            <Label Margin="10,10,10,10" Text="We use a member's public youtube playlists to show and play their showcase videos. Tap a playlist below to view its videos:"/>
                                         </Grid>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                            <!-- /pull:SfPullToRefresh.PullableContent>
+                                    </CollectionView.Header>
+
+                                    <CollectionView.ItemsLayout>
+                                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" >
+                                        </LinearItemsLayout>
+                                    </CollectionView.ItemsLayout>
+
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Padding="5,5,5,5">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+                                                <StackLayout Padding="0,0,0,0" VerticalOptions="Center">
+                                                    <Image Source="{Binding DefaultThumbnail}" 
+                                                 Aspect="AspectFill" HeightRequest="200"  WidthRequest="310" />
+                                                    <Label Text="{Binding Title}" TextColor="Blue" FontSize="15"
+                                                   FontAttributes="None" />
+                                                    <Label Text="{Binding Description}" TextColor="Gray" FontSize="14"  Margin="0, 0, 0, 7"
+                                                   FontAttributes="None" VerticalOptions="End" />
+                                                </StackLayout>
+                                                <!-- Separator -->
+                                                <BoxView HeightRequest="2" BackgroundColor="LightGray" VerticalOptions="End"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                <!-- /pull:SfPullToRefresh.PullableContent>
                             </pull:SfPullToRefresh -->
-                        </Grid>
-                    </tabView:SfTabItem.Content>
-                </tabView:SfTabItem>
+                            </Grid>
 
-            </tabView:SfTabView.Items>
-        </tabView:SfTabView>
+                        </tabView:SfTabItem.Content>
+                    </tabView:SfTabItem>
 
-    </StackLayout>
+                </tabView:SfTabView.Items>
+            </tabView:SfTabView>
+
+
+        </StackLayout>
+
+        <StackLayout Padding="0,15,0,0"
+        x:Name="aiLayout"
+        IsVisible="{Binding IsRefreshing}" 
+        AbsoluteLayout.LayoutBounds="0,0,1,1"
+        AbsoluteLayout.LayoutFlags="All"
+        BackgroundColor="White" Opacity="1.9">
+            <ActivityIndicator
+        x:Name="ai"
+        IsRunning="{Binding IsRefreshing}"
+        HorizontalOptions="CenterAndExpand"
+        VerticalOptions="Center"
+        Color="Black"/>
+            <Label Text="Loading Data..." HorizontalOptions="Center" VerticalOptions="Center" TextColor="Black"/>
+        </StackLayout>
+
+    </AbsoluteLayout>
+
 
 </ContentPage>

@@ -1,17 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:sp_maui.Controls"
-             xmlns:data="clr-namespace:sp_maui.ViewModels"
-             x:Class="sp_maui.Views.ProfilePlaylistPage"
+             xmlns:controls="clr-namespace:spmaui.Controls"
+             x:Class="spmaui.Views.ProfilePlaylistPage"
              xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              ios:Page.UseSafeArea="True" 
              Title="Playlist Videos">
-
-    <ContentPage.BindingContext>
-        <data:ProfilePlaylistViewModel />
-    </ContentPage.BindingContext>
-
     <ContentPage.Resources>
         <Style TargetType="Grid">
             <Setter Property="VisualStateManager.VisualStateGroups">
@@ -30,13 +24,6 @@
         </Style>
     </ContentPage.Resources>
 
-    <Shell.SearchHandler>
-        <controls:SPSearchHandler Placeholder="Search..."
-         ShowsResults="true"
-         DisplayMemberName="Name" />
-    </Shell.SearchHandler>
-
-
     <!--pull:SfPullToRefresh x:Name="pulltorefresh"
                            TransitionMode="Push" 
                            PullingThreshold="100" 
@@ -47,12 +34,18 @@
                            RefreshContentThreshold="40"
                            RefreshContentWidth="30">
         <pull:SfPullToRefresh.PullableContent -->
-
+    <VerticalStackLayout>
+    
+                <Button x:Name="btnReturnToPlaylist"  FontSize="Medium"  WidthRequest="300"
+                Clicked="OnReturnToPlaylist_Clicked"
+                TextColor="White" BorderColor="Black" BackgroundColor="{StaticResource Blue100Accent}"  CornerRadius="20"
+                FlexLayout.AlignSelf="Stretch"  HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" FontAttributes="Bold" Text="Return to Playlists"/>
+ 
             <CollectionView
             ItemsSource="{Binding Videos}"
             x:Name="collectionViewVids" 
-            Margin="10"                     
-            SelectionMode="Single" BackgroundColor="SeaShell"
+            Margin="10"      HeightRequest="720"               
+            SelectionMode="Single" BackgroundColor="WhiteSmoke"
             SelectionChanged="OnCollectionViewSelectionChanged">
 
                 <CollectionView.Header >
@@ -110,5 +103,5 @@
 
         <!-- /pull:SfPullToRefresh.PullableContent>
     </pull:SfPullToRefresh -->
-
+        </VerticalStackLayout>
 </ContentPage>

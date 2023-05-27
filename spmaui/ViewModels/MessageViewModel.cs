@@ -1,7 +1,7 @@
 ﻿
 using System;
-using sp_maui.Services;
-using sp_maui.Models;
+using spmaui.Services;
+using spmaui.Models;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Collections.Generic;
@@ -9,14 +9,16 @@ using System.Runtime.CompilerServices;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using sp_maui;
+using spmaui;
+using spmaui.Views;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
     public class MessageViewModel : INotifyPropertyChanged
     {
         public ICommand RefreshCommand { get; set; }
         public Command <MessageInfoModel> DropCommand { get; set; }
+        public Command<MessageInfoModel> OpenCommand { get; set; }
 
         async private void OnRefreshCommandExecuted() => await DoRefresh();
         
@@ -58,14 +60,17 @@ namespace sp_maui.ViewModels
 
         private readonly ContactsModel _connectionsSvc;
 
-        public MessageViewModel()
+        private readonly IMessages _messagesSvc; 
+        public MessageViewModel(IMessages messagesSvc)
         {
+            _messagesSvc = messagesSvc;
+            IsRefreshing = true;
             DropCommand = new  Command<MessageInfoModel>  (OnDropMessage);
+            OpenCommand = new Command<MessageInfoModel>(OnOpenMessage);
             RefreshCommand = new Command (OnRefreshCommandExecuted);
             _connectionsSvc = new ContactsModel();
             Messages = new List<MessageInfoModel>();
-            GetMessagesAsync();
-            
+            Task.Run(() => GetMessagesAsync().Wait());
         }
 
         async void OnDropMessage(MessageInfoModel message)
@@ -74,31 +79,85 @@ namespace sp_maui.ViewModels
             await DoRefresh();
         }
 
+        async void OnOpenMessage(MessageInfoModel message)
+        {
+            await OpenMessage(message);
+            await DoRefresh();
+        }
+
+        public async Task OpenMessage(MessageInfoModel message)
+        {
+            Preferences.Set("MessageID", message.messageID);
+            Preferences.Set("SenderID", message.fromID);
+            await  Application.Current.MainPage.Navigation.PushModalAsync(new MessageDetailsPage(new MessageDetailsViewModel(new spmaui.Services.Messages())));
+        }
 
         async Task GetMessagesAsync()
         {
-           
             List<MessageInfoModel> rn = await GetMyMessages();
             Messages = rn;
+            IsRefreshing = false;
         }
 
         public async Task DeleteMessage(string messageID)
         {
-            sp_maui.Services.Messages svc = new sp_maui.Services.Messages();
-            string jwtToken = Preferences.Get("AccessToken", "");
-            await svc.DeleteMessage (messageID,"", jwtToken);
+            try
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                await _messagesSvc.DeleteMessage(messageID, "", jwtToken);
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task<List<MessageInfoModel>> GetMyMessages()
         {
-            sp_maui.Services.Messages svc = new sp_maui.Services.Messages();
-            string jwtToken = Preferences.Get("AccessToken", "");
-            int memberID = 0;
-            if (Preferences.Get("UserID", "") != null)
-                memberID = int.Parse( Preferences.Get("UserID", ""));
+            try
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                int memberID = 0;
+                if (Preferences.Get("UserID", "") != null)
+                    memberID = int.Parse(Preferences.Get("UserID", ""));
 
-            List<MessageInfoModel> result = await svc.GetMemberMessages (memberID,"Inbox","All", jwtToken);
-            return result;
+                List<MessageInfoModel> result = await _messagesSvc.GetMemberMessages(memberID, "Inbox", "All", jwtToken);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+                return new List<MessageInfoModel>();
+            }
+        }
+
+        public async void LogException(string msg, string stackTrace, string jwt)
+        {
+            await _messagesSvc.LogException(msg, stackTrace, jwt);
         }
 
         #region INotifyPropertyChanged

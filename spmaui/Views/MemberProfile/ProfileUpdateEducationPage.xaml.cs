@@ -1,30 +1,30 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.Services;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.Services;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class ProfileUpdateEducationPage : ContentPage
 {
-   MemberProfileEducationModel educationModel = new MemberProfileEducationModel();
-    public ProfileUpdateEducationPage()
-	{
-		InitializeComponent();
-        // Subscribe to a message (which the ViewModel has also subscribed to) to display an alert
-        MessagingCenter.Subscribe<ProfileUpdateEducationPage, string>(this, "RefreshEducation", async (sender, arg) =>
-        {
-            //await DisplayAlert("Message received", "arg=" + arg, "OK");
-        });
+    private readonly ProfileViewModel _profileViewModel;
+    MemberProfileEducationModel educationModel = new MemberProfileEducationModel();
+    public ProfileUpdateEducationPage(ProfileViewModel profileViewModel)
+    {
+        InitializeComponent();
+        _profileViewModel = profileViewModel;
+        this.BindingContext = profileViewModel;
 
         educationModel.schoolImage = Preferences.Get("schoolimage", "");
         educationModel.major = Preferences.Get("major", "");
         educationModel.degree = Preferences.Get("degree", "");
         educationModel.yearClass = Preferences.Get("year", "");
         educationModel.sportLevelType = Preferences.Get("competitionlevel", "");
+        educationModel.schoolType = Preferences.Get("schoolType", "");
         educationModel.schoolID = Preferences.Get("schoolID", "");
         educationModel.schoolName = Preferences.Get("schoolName", "");
+        educationModel.schoolType = Preferences.Get("schoolType", "");
 
         imgProfile.Source = educationModel.schoolImage;
 
@@ -62,33 +62,42 @@ public partial class ProfileUpdateEducationPage : ContentPage
 
     async void OnUpdate_Clicked(object sender, EventArgs args)
     {
-        //do update here
-        //DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-        ProfileViewModel p = new ProfileViewModel();
-        educationModel.schoolName = lblName.Text;
-        educationModel.major = lblMajor.Text;
-        educationModel.degree = DegreePicker.SelectedItem.ToString();
-        educationModel.yearClass = YearPicker.SelectedItem.ToString();
-        educationModel.sportLevelType = SportLevelPicker.SelectedItem.ToString();
+        try
+        {
+            //do update here
+            educationModel.schoolName = lblName.Text;
+            educationModel.major = lblMajor.Text;
+            educationModel.degree = DegreePicker.SelectedItem.ToString();
+            educationModel.yearClass = YearPicker.SelectedItem.ToString();
+            educationModel.sportLevelType = SportLevelPicker.SelectedItem.ToString();
 
-        if (String.IsNullOrEmpty(educationModel.Societies))
-            educationModel.Societies = "";
+            if (String.IsNullOrEmpty(educationModel.Societies))
+                educationModel.Societies = "";
 
-        if (educationModel.degree == "Undergraduate")
-            educationModel.degree = "1";
-        else if (educationModel.degree == "Post Graduate")
-            educationModel.degree = "2";
-        else if (educationModel.degree == "High School Diploma")
-            educationModel.degree = "3";
-        else if (educationModel.degree == "GED")
-            educationModel.degree = "4";
+            if (educationModel.degree == "Undergraduate")
+                educationModel.degree = "1";
+            else if (educationModel.degree == "Post Graduate")
+                educationModel.degree = "2";
+            else if (educationModel.degree == "High School Diploma")
+                educationModel.degree = "3";
+            else if (educationModel.degree == "GED")
+                educationModel.degree = "4";
 
-        await p.UpdateEducation(educationModel);
-        await Navigation.PopModalAsync();
-        MessagingCenter.Send<ProfileUpdateEducationPage>(this, "RefreshEducation");
-       // DependencyService.Get<ILoadingPageService>().HideLoadingPage();
+            await _profileViewModel.UpdateEducation(educationModel);
+            await Navigation.PopModalAsync();
+            MessagingCenter.Send<ProfileUpdateEducationPage>(this, "RefreshEducation");
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _profileViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
     }
-
-
-
 }

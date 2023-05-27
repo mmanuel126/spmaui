@@ -4,9 +4,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestSharp;
-using sp_maui.Models;
+using spmaui.Models;
 
-namespace sp_maui.Services
+namespace spmaui.Services
 {
     public class Commons: ICommons
     {
@@ -18,6 +18,11 @@ namespace sp_maui.Services
             _restClient = new RestClient(COMMONS_SERVICE_URI);
         }
 
+        /// <summary>
+        /// get states.
+        /// </summary>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task<List<StatesModel>> GetStates(string jwtToken)
         {
             var request = new RestRequest("GetStates", Method.Get);
@@ -28,6 +33,13 @@ namespace sp_maui.Services
             return dynJson;
         }
 
+        /// <summary>
+        /// get schools by state.
+        /// </summary>
+        /// <param name="strState"></param>
+        /// <param name="instType"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task<List<SchoolsByStateModel>> GetSchoolsByState(string strState, string instType, string jwt)
         {
              var request = new RestRequest("GetSchoolByState?state=" + strState + "&institutionType=" + instType , Method.Get);

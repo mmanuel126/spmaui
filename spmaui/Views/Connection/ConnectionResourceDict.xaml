@@ -4,25 +4,13 @@
 
     <ResourceDictionary>
         
-            <Style x:Key="NameLabel" TargetType="Label">
-                <Setter Property="FontSize" Value="15" />
+           <Style x:Key="NameLabel" TargetType="Label">
+                <Setter Property="FontSize" Value="18" />
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="TextColor" Value="Black" />
             </Style>
 
             <Style x:Key="LabelStyle" TargetType="Label">
-                <Setter Property="FontSize" Value="14" />
-                <Setter Property="FontAttributes" Value="Bold"></Setter>
-                <Setter Property="TextColor" Value="DarkSlateGray" />
-                <Setter Property="WidthRequest" Value="330"></Setter>
-            </Style>
-
-            <Style x:Key="TextStyle" TargetType="Label">
-                <Setter Property="FontSize" Value="16" />
-                <Setter Property="WidthRequest" Value="330"></Setter>
-            </Style>
-
-            <Style x:Key="LabelStyle2" TargetType="Label">
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="TextColor" Value="Gray" />
             </Style>
@@ -36,11 +24,31 @@
                 <Setter Property="Orientation" Value="Horizontal" />
             </Style>
 
+            <Style x:Key="detailsStackLayout" TargetType="StackLayout">
+                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+                <Setter Property="VerticalOptions" Value="FillAndExpand" />
+                <Setter Property="Spacing" Value="2" />
+            </Style>
 
             <Style x:Key="imageStyle" TargetType="Image">
                 <Setter Property="WidthRequest" Value="8" />
                 <Setter Property="HeightRequest" Value="8" />
             </Style>
+
+            <Style x:Key="profileImageStyle" TargetType="Image">
+                <Setter Property="WidthRequest" Value="80" />
+                <Setter Property="HeightRequest" Value="60" />
+                <Setter Property="Aspect" Value="AspectFit" />
+            </Style>
+
+            <Style x:Key="profileImageFrameStyle" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="40" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="BackgroundColor" Value="SeaShell"></Setter>
+                <Setter Property="IsClippedToBounds" Value="True" />
+            </Style>
+
             <Style x:Key="FrameCardViewStyle" TargetType="Frame">
                 <Setter Property="CornerRadius" Value="5" />
                 <Setter Property="Margin" Value="5" />
@@ -54,25 +62,6 @@
                 <Setter Property="Margin" Value="5" />
                 <Setter Property="HorizontalOptions" Value="FillAndExpand" />
                 <Setter Property="Spacing" Value="8" />
-            </Style>
-
-            <Style x:Key="detailsStackLayout" TargetType="StackLayout">
-                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
-                <Setter Property="VerticalOptions" Value="FillAndExpand" />
-                <Setter Property="Spacing" Value="2" />
-            </Style>
-
-            <Style x:Key="profileImageStyle" TargetType="Image">
-                <Setter Property="WidthRequest" Value="48" />
-                <Setter Property="HeightRequest" Value="48" />
-                <Setter Property="Aspect" Value="AspectFit" />
-            </Style>
-
-            <Style x:Key="profileImageFrameStyle" TargetType="Frame">
-                <Setter Property="CornerRadius" Value="24" />
-                <Setter Property="Margin" Value="0" />
-                <Setter Property="Padding" Value="0" />
-                <Setter Property="IsClippedToBounds" Value="True" />
             </Style>
 
             <Style x:Key="itemsInsideCardViewStackLayoutStyle" TargetType="StackLayout">

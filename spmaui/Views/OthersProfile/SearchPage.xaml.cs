@@ -2,68 +2,107 @@
 using Microsoft.Maui.Controls;
 using spmaui.Models;
 using spmaui.ViewModels;
+using spmaui.Services;
 
 namespace spmaui.Views;
 
-public partial class OthersProfilePage : ContentPage
+public partial class SearchPage : ContentPage
 {
     
-    public OthersProfilePage()
+    public SearchPage()
     {
         InitializeComponent();
-        imgProfile.Source = Preferences.Get("ProfileImage", "");
-        lblName.Text = Preferences.Get("ProfileName", "");
-        lblTitle.Text = Preferences.Get("ProfileTitle", "");
     }
 
-
-    async void OnRefreshProfile_Clicked(object sender, EventArgs e)
+    async void OnTapGestureRecognizerTapped(object sender, EventArgs e)
     {
-        var x = (ProfileViewModel)this.BindingContext;
-        x.IsRefreshing = true;
-        await x.GetMemberBasicInfo();
-        await x.GetMemberContactInfo();
-        await x.GetMemberEducation();
-        await x.GetPlayList();
-        this.BindingContext = x;
-        x.IsRefreshing = false;
+        var label = sender as Label;
+        var data = label.BindingContext as SearchModel;
+        
+        Preferences.Set("ProfileID", data.entityID);
+        Preferences.Set("ProfileName", data.entityName);
+        if (String.IsNullOrEmpty(data.Params)) data.Params = "Unknown Title";
+        Preferences.Set("ProfileTitle", data.Params);
+        Preferences.Set("ProfileImage", data.picturePath);
+        Preferences.Set("ProfileLoginUser", "no");
+        await Shell.Current.Navigation.PushModalAsync(new OthersProfilePage(new ProfileViewModel(new Members(), new Commons())));
+       // await Shell.Current.GoToAsync("othersprofile");
     }
 
-    async void OnEducationSelectionChanged(object sender, SelectionChangedEventArgs e)
+    async void OnConnectClicked(object sender, EventArgs e)
     {
-        if (e.CurrentSelection.Count == 0)
-            return;
-        var current = e.CurrentSelection;
-
-        MemberProfileEducationModel nm = (MemberProfileEducationModel)current[0];
-        await Launcher.OpenAsync(nm.webSite);
-        ((CollectionView)sender).SelectedItem = null;
-    }
-
-    async void OnPhotosButtonClicked(object sender, EventArgs args)
-    {
-        var somevariablefromviewmodel = ((ProfileViewModel)BindingContext).ProfileContactInfo.Instagram;
-        string url = somevariablefromviewmodel;
-        if (String.IsNullOrEmpty(url))
+        try
         {
-            await DisplayAlert("Profile Settings", "The profiler instagram URL information not  provided!", "Ok");
+            var swipeItem = sender as SwipeItem;
+            var data = swipeItem.BindingContext as SearchModel;
+
+            bool ans = await DisplayAlert("Connection Request", "Please note the member will have to confirm your request. You should send this request only if you know this person. Are you sure you want to send this connection request?", "Yes", "No");
+            if (ans)
+            {
+                if (!String.IsNullOrEmpty(searchBar.Text))
+                {
+                    Connections conSvc = new Connections();
+                    string jwtToken = Preferences.Get("AccessToken", "").ToString();
+                    string memberID = "0";
+                    if (Preferences.Get("UserID", "").ToString() != null)
+                        memberID = Preferences.Get("UserID", "").ToString();
+                    await conSvc.AddConnection(memberID, data.entityID, jwtToken);
+                    var Result = conSvc.GetSearchList(memberID, searchBar.Text, jwtToken);
+                    searchList.ItemsSource = Result;
+                }
+                else
+                {
+                    searchList.ItemsSource = null;
+                }
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await Browser.OpenAsync(url);
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                Connections conSvc = new Connections();
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                await conSvc.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
-    async void OnVideoSelectionChanged(object sender, SelectionChangedEventArgs e)
+    void OnTextChanged(object sender, EventArgs e)
     {
-        ((CollectionView)sender).SelectedItem = null;
-        if (e.CurrentSelection.Count == 0)
-            return;
-        var current = e.CurrentSelection;
-        YoutubePlayListModel nm = (YoutubePlayListModel)current[0];
-
-        Preferences.Set("PlayListID", nm.Id);
-        Preferences.Set("PlayListTitle", nm.Title);
-        await Shell.Current.GoToAsync("playlistvideos");
+        try
+        {
+            if (!String.IsNullOrEmpty(searchBar.Text))
+            {
+                Connections conSvc = new Connections();
+                string jwtToken = Preferences.Get("AccessToken", "").ToString();
+                string memberID = "0";
+                if (Preferences.Get("UserID", "").ToString() != null)
+                    memberID = Preferences.Get("UserID", "").ToString();
+                var Result = conSvc.GetSearchList(memberID, searchBar.Text, jwtToken);
+                searchList.ItemsSource = Result;
+            }
+            else
+            {
+                searchList.ItemsSource = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+               DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                Connections conSvc = new Connections();
+                DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                Task.Run(() => conSvc.LogException(ex.Message, ex.StackTrace, ""));
+            }
+        }
     }
+
 }

@@ -1,6 +1,5 @@
-﻿//using ESMobile.Core.Models.Organizations;
-
-namespace sp_maui.Models
+﻿
+namespace spmaui.Models
 {
     public class MemberProfileEducationModel
     {
@@ -13,8 +12,7 @@ namespace sp_maui.Models
         public string yearClass { get; set; }
         public string schoolType { get; set; }
         public string Societies { get; set; }       
-       // public InstitutionModel SchoolInfo { get; set; }
-        public string schoolWebSite { get; set; }
+        public string webSite { get; set; }
         public string sportLevelType { get; set; }
     }
 }

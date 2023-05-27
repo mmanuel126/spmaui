@@ -1,19 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using sp_maui.Services;
-using sp_maui.Models;
-using sp_maui.Views;
-using Microsoft.Extensions.Caching.Memory;
+using spmaui.Services;
+using spmaui.Models;
+using spmaui.Views;
+using YoutubeExplode.Channels;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
     public class ProfileViewModel : INotifyPropertyChanged
     {
-        public Item SelectedSport { get; set; }
+        public Command<MemberProfileEducationModel> DeleteCommand { get; set; }
+        public Command<MemberProfileEducationModel> EditCommand { get; set; }
+        public Command AddNewCommand { get; set; }
+        public Command<YoutubePlayListModel> GotoPlaylistCommand { get; set; }
+
+        public Command RefreshCommand { get; set; }
 
         MemberProfileBasicInfoModel _memberProfileBasicInfo;
         public MemberProfileBasicInfoModel ProfileBasicInfo
@@ -29,18 +30,20 @@ namespace sp_maui.ViewModels
             set { _memberProfileContactInfo = value; OnPropertyChanged(); }
         }
 
+        List<MemberProfileEducationModel> _memberEducation;
+        public List<MemberProfileEducationModel> ProfileEducation
+        {
+            get { return _memberEducation; }
+            set { _memberEducation = value; OnPropertyChanged(); }
+        }
+
+        public Item SelectedSport { get; set; }
         List<Item> _sportsList;
         public List<Item> SportsList
         {
             get { return _sportsList; }
             set { _sportsList = value; OnPropertyChanged(); }
         }
-
-        public Command<MemberProfileEducationModel> DeleteCommand { get; set; }
-        public Command<MemberProfileEducationModel> EditCommand { get; set; }
-        public Command AddNewCommand { get; set; }
-
-        List<MemberProfileEducationModel> _memberEducation;
 
         List<StatesModel> _states;
         public List<StatesModel> States
@@ -49,7 +52,6 @@ namespace sp_maui.ViewModels
             set { _states = value; OnPropertyChanged(); }
         }
 
-
         List<SchoolsByStateModel> _schools;
         public List<SchoolsByStateModel> Schools
         {
@@ -57,32 +59,7 @@ namespace sp_maui.ViewModels
             set { _schools = value; OnPropertyChanged(); }
         }
 
-
-        public List<MemberProfileEducationModel> ProfileEducation
-        {
-            get { return _memberEducation; }
-            set { _memberEducation = value; OnPropertyChanged(); }
-        }
-
-        public Command RefreshCommand { get; set; }
-
-        private void OnRefreshCommandExecuted() => DoRefreshPosts();
-
-        bool isRefreshing;
-        public bool IsRefreshing
-        {
-            get => isRefreshing;
-
-            set
-            {
-                isRefreshing = value;
-
-                OnPropertyChanged(nameof(IsRefreshing));
-            }
-        }
-
         List<YoutubePlayListModel> _Playlist;
-
         public List<YoutubePlayListModel> Playlist
         {
             get
@@ -96,47 +73,104 @@ namespace sp_maui.ViewModels
             }
         }
 
-
-        public ProfileViewModel()
+        bool isRefreshing;
+        public bool IsRefreshing
         {
-            GetMemberBasicInfo();
-            //GetSportsList();
-            GetMemberContactInfo();
-            /* MessagingCenter.Subscribe<ProfileEditPhotosPage>(this, "RefreshContacts", (sender) =>
-             {
-                 GetMemberContactInfo();
-             });*/
-
-            DeleteCommand = new Command<MemberProfileEducationModel>(OnDeleteEducation);
-            EditCommand = new Command<MemberProfileEducationModel>(OnEditEducation);
-            AddNewCommand = new Command(OnAddNewEducation);
-
-            GetMemberEducation();
-            GetStates();
-            //GetSchools();
-
-            //MessagingCenter.Subscribe<ProfileEditEducationUpdatePage>(this, "RefreshEducation", (sender) =>
-            //{
-            //    GetMemberEducation();
-            //});
-
-            //MessagingCenter.Subscribe<ProfileEditEducationAddNewPage>(this, "RefreshEducation", (sender) =>
-            //{
-            //    GetMemberEducation();
-            //});
-
-            RefreshCommand = new Command(OnRefreshCommandExecuted);
-            Playlist = new List<YoutubePlayListModel>();
-            GetPlayListAsync();
-
+            get => isRefreshing;
+            set
+            {
+                isRefreshing = value;
+                OnPropertyChanged(nameof(IsRefreshing));
+            }
         }
 
+        private readonly IMembers _membersSvc;
+        private readonly ICommons _commonsSvc;
 
+        public ProfileViewModel(IMembers membersSvc, ICommons commonsSvc)
+        {
+            try
+            {
+                _membersSvc = membersSvc;
+                _commonsSvc = commonsSvc;
+
+                IsRefreshing = true;
+                Task.Run(() => GetMemberBasicInfo().Wait());
+                //GetSportsList();
+                Task.Run(() => GetMemberContactInfo().Wait());
+
+                DeleteCommand = new Command<MemberProfileEducationModel>(OnDeleteEducation);
+                EditCommand = new Command<MemberProfileEducationModel>(OnEditEducation);
+                AddNewCommand = new Command(OnAddNewEducation);
+                GotoPlaylistCommand = new Command<YoutubePlayListModel>(OnGotoPlaylistPage);
+
+                Task.Run(() => GetMemberEducation().Wait());
+                Task.Run(() => GetStates().Wait());
+                //GetSchools();
+
+                MessagingCenter.Subscribe<ProfileUpdateEducationPage>(this, "RefreshEducation", (sender) =>
+                {
+                    Task.Run(() => GetMemberEducation().Wait());
+                });
+
+                MessagingCenter.Subscribe<ProfileAddEducationPage>(this, "RefreshEducation", (sender) =>
+                {
+                    Task.Run(() => GetMemberEducation().Wait());
+                });
+
+                RefreshCommand = new Command(OnRefreshCommandExecuted);
+                Playlist = new List<YoutubePlayListModel>();
+                Task.Run(() => GetPlayListAsync().Wait());
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
+        }
+
+        private void OnRefreshCommandExecuted() => Task.Run(() => DoRefreshPosts());
+
+        async Task DoRefreshPosts()
+        {
+            try
+            {
+                Playlist.Clear();
+                Playlist = new List<YoutubePlayListModel>();
+                this.Playlist = await this.GetPlayList();
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
+        }
 
         public async Task GetSportsList()
         {
             string jwtToken = Preferences.Get("AccessToken", "");
-            Members _membersSvc = new Members();
             SportsList = await _membersSvc.GetSportsList(jwtToken);
 
             foreach(var x in SportsList)
@@ -150,59 +184,99 @@ namespace sp_maui.ViewModels
 
         public async Task GetMemberBasicInfo()
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                ProfileBasicInfo = await _membersSvc.GetMemberBasicInfo(int.Parse(GetMemberID()), jwtToken);
+
+                var lst  = await _membersSvc.GetMemberPlaylists(GetMemberID(), jwtToken);
+                if (lst != null )
+                {
+                    if (lst.Count != 0) {
+                        ProfileBasicInfo.ProfilePlayList = lst;
+                    }
+                }
             }
-            Members _membersSvc = new Members();
-            ProfileBasicInfo = await _membersSvc.GetMemberBasicInfo(int.Parse(memberID), jwtToken);
-            
-            ProfileBasicInfo.ProfilePlayList = await _membersSvc.GetMemberPlaylists(memberID, jwtToken);
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task SaveMemberGeneralInfo(MemberProfileBasicInfoModel model)
         {
             string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
-            {
-                memberID = Preferences.Get("UserID", "");
-            }
-            Members _membersSvc = new Members();
-            await _membersSvc.SaveMemberGeneralInfo(memberID, model, jwtToken);
+            await _membersSvc.SaveMemberGeneralInfo(GetMemberID(), model, jwtToken);
         }
 
         public async Task GetMemberContactInfo()
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                var pcInfoLst = await _membersSvc.GetMemberContactInfo(int.Parse(GetMemberID()), jwtToken);
+                ProfileContactInfo = pcInfoLst;
+                IsRefreshing = false;
             }
-            Members _membersSvc = new Members();
-            var pcInfoLst = await _membersSvc.GetMemberContactInfo(int.Parse(memberID), jwtToken);
-            ProfileContactInfo = pcInfoLst;
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task SaveMemberContactInfo(MemberProfileContactInfoModel model)
         {
             string jwtToken = Preferences.Get("AccessToken","");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID","")))
-            {
-                memberID = Preferences.Get("UserID", "");
-            }
-            Members _membersSvc = new Members();
-            await _membersSvc.SaveMemberContactInfo(memberID, model, jwtToken);
+            await _membersSvc.SaveMemberContactInfo(GetMemberID(), model, jwtToken);
         }
 
         async void OnDeleteEducation(MemberProfileEducationModel educationModel)
         {
-            await DeleteEducation(educationModel);
-            await GetMemberEducation();
+            try
+            {
+                await DeleteEducation(educationModel);
+                await GetMemberEducation();
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         async void OnEditEducation(MemberProfileEducationModel educationModel)
@@ -211,122 +285,246 @@ namespace sp_maui.ViewModels
             Preferences.Set("major",educationModel.major);
             Preferences.Set("degree",educationModel.degree);
             Preferences.Set("year",educationModel.yearClass);
-            Preferences.Set("competionlevel", educationModel.sportLevelType);
+            Preferences.Set("competitionlevel", educationModel.sportLevelType);
+            Preferences.Set("schoolType", educationModel.schoolType);
             Preferences.Set("schoolID", educationModel.schoolID);
             Preferences.Set("schoolName", educationModel.schoolName);
-            await Application.Current.MainPage.Navigation.PushModalAsync(new ProfileUpdateEducationPage());
+            await Application.Current.MainPage.Navigation.PushModalAsync(new ProfileUpdateEducationPage(this));
         }
 
         async void OnAddNewEducation()
         {
-            await Application.Current.MainPage.Navigation.PushModalAsync(new ProfileAddEducationPage());
+            await Application.Current.MainPage.Navigation.PushModalAsync(new ProfileAddEducationPage(this));
+        }
+
+        async void OnGotoPlaylistPage(YoutubePlayListModel p)
+        {
+            Preferences.Set("PlayListID", p.Id);
+            Preferences.Set("PlayListTitle", p.Title);
+            await Shell.Current.GoToAsync("playlistvideos");
         }
 
         public async Task DeleteEducation(MemberProfileEducationModel educationModel)
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                await _membersSvc.RemoveSchool(GetMemberID(), educationModel.schoolID, educationModel.schoolType, jwtToken);
             }
-            Members svc = new Members();
-            await svc.RemoveSchool(memberID, educationModel.schoolID, educationModel.schoolType, jwtToken);
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task UpdateEducation(MemberProfileEducationModel schoolInfo)
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                await _membersSvc.UpdateSchool(GetMemberID(), schoolInfo, jwtToken);
+                await GetMemberEducation();
             }
-
-            Members _membersSvc = new Members();
-            await _membersSvc.UpdateSchool(memberID, schoolInfo, jwtToken);
-            await GetMemberEducation();
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task AddNewEducation(MemberProfileEducationModel schoolInfo)
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                await _membersSvc.AddNewSchool(GetMemberID(), schoolInfo, jwtToken);
+                await GetMemberEducation();
             }
-
-            Members _membersSvc = new Members();
-            await _membersSvc.AddNewSchool(memberID, schoolInfo, jwtToken);
-            await GetMemberEducation();
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task GetMemberEducation()
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID","")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                ProfileEducation = await _membersSvc.GetMemberEducationInfo(int.Parse(GetMemberID()), jwtToken);
             }
-
-            Members _membersSvc = new Members();
-            ProfileEducation = await _membersSvc.GetMemberEducationInfo(int.Parse(memberID), jwtToken);
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         private async Task GetStates()
         {
-            Commons svc = new Commons();
-            string jwtToken = Preferences.Get("AccessToken", "");
-            States = await svc.GetStates(jwtToken);
+            try
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                States = await _commonsSvc.GetStates(jwtToken);
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         private async Task GetSchools()
         {
-            Commons svc = new Commons();
-            string jwtToken = Preferences.Get("AccessToken","");
-            Schools = await svc.GetSchoolsByState("AZ", "3", jwtToken);
-        }
-
-        async Task DoRefreshPosts()
-        {
-            Playlist.Clear();
-            Playlist = new List<YoutubePlayListModel>();
-
-            IsRefreshing = true;
-            this.Playlist = await this.GetPlayList();
-            IsRefreshing = false;
+            try
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                Schools = await _commonsSvc.GetSchoolsByState("AZ", "3", jwtToken);
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         async Task GetPlayListAsync()
         {
             List<YoutubePlayListModel> rn = await GetPlayList();
             Playlist = rn;
+            IsRefreshing = false;
         }
 
         public async Task<List<YoutubePlayListModel>> GetPlayList()
         {
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID","")))
+            try
             {
-                memberID = Preferences.Get("UserID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                return await _membersSvc.GetMemberPlaylists(GetMemberID(), jwtToken);
             }
-            Members _membersSvc = new Members();
-            return await _membersSvc.GetMemberPlaylists(memberID, jwtToken);
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
+            return new List<YoutubePlayListModel>();
         }
 
         public async Task SaveChannelID(string channelID)
         {
             string jwtToken = Preferences.Get("AccessToken", "");
+            await _membersSvc.SaveChannelID(GetMemberID(), channelID, jwtToken);
+        }
+
+        public async Task SaveInstagramURL(string url)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            await _membersSvc.SaveInstagramURL(GetMemberID(), url, jwtToken);
+        }
+
+        private string GetMemberID()
+        {
             string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            string isLoginUser = Preferences.Get("ProfileLoginUser", "yes");
+            if (isLoginUser == "yes")
             {
-                memberID = Preferences.Get("UserID", "");
+                if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                {
+                    memberID = Preferences.Get("UserID", "");
+                }
             }
-            Members _membersSvc = new Members();
-            await _membersSvc.SaveChannelID(memberID, channelID, jwtToken);
+            else if (isLoginUser== "no")
+            {
+                if (!String.IsNullOrEmpty(Preferences.Get("ProfileID", "")))
+                {
+                    memberID = Preferences.Get("ProfileID", "");
+                }
+            }
+            return memberID;
+        }
+
+        public async void LogException(string msg, string stackTrace, string jwt)
+        {
+            await _membersSvc.LogException(msg, stackTrace, jwt);
         }
 
         #region INotifyPropertyChanged

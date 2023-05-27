@@ -6,12 +6,14 @@ namespace spmaui.Views.Account;
 
 public partial class RegisterPage : ContentPage
 {
-    MemberViewModel vm;
+    private readonly MemberViewModel _memberViewModel;
   
-    public RegisterPage()
+    public RegisterPage(MemberViewModel memberViewModel)
     {
         InitializeComponent();
-       
+        _memberViewModel = memberViewModel;
+        this.BindingContext = memberViewModel;
+
         //load gender picker
         var genderList = new List<string>();
         genderList.Add("Female");
@@ -32,11 +34,7 @@ public partial class RegisterPage : ContentPage
         profiePickerList.Add("Scout");
         profiePickerList.Add("Sports Fanatic");
         ProfileType.ItemsSource = profiePickerList;
-
-
-        vm = new MemberViewModel();
-        this.Title = "Create Account";
-
+       
         //when you touch recover password label
         var recoverpassword_tap = new TapGestureRecognizer();
         recoverpassword_tap.Tapped += RecoverPassword_tap_Tapped;
@@ -50,16 +48,14 @@ public partial class RegisterPage : ContentPage
 
     private async void RecoverPassword_tap_Tapped(object sender, EventArgs e)
     {
-        var recoverPage = new RecoverPwdPage();
-        await Navigation.PushModalAsync(new NavigationPage(recoverPage));
+        var recoverPage = new RecoverPwdPage(_memberViewModel);
+        await Navigation.PushModalAsync(recoverPage);
     }
 
     private async void Login_tap_Tapped(object sender, EventArgs e)
     {
-        var loginPage = new LoginPage();
-        await Navigation.PushModalAsync(new NavigationPage(loginPage));
-
-
+        var loginPage = new LoginPage(_memberViewModel);
+        await Navigation.PushModalAsync(loginPage);
     }
 
     private async void SignUpButton_Clicked(object sender, EventArgs e)
@@ -144,7 +140,7 @@ public partial class RegisterPage : ContentPage
                     year = byear
                 };
 
-                var result = await vm.register(user);
+                var result = await _memberViewModel.register(user);
 
                 //var result = "ExistingEmail";
                 if (result == "ExistingEmail")
@@ -156,7 +152,7 @@ public partial class RegisterPage : ContentPage
                 {
                     // confirm register page
                     Preferences.Set("RegisteredEmail",Email.Text);
-                    var confirmRegisterPage = new ConfirmRegisterPage();
+                    var confirmRegisterPage = new ConfirmRegisterPage(_memberViewModel);
                     await Navigation.PushModalAsync(new NavigationPage(confirmRegisterPage));
                     aiLayout.IsVisible = false;
                 }
@@ -164,8 +160,15 @@ public partial class RegisterPage : ContentPage
             catch (FormatException ex)
             {
                 aiLayout.IsVisible = false;
-                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
-                
+                if (ex.GetType() == typeof(HttpRequestException))
+                {
+                    await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                }
+                else
+                {
+                    await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                    _memberViewModel.LogException(ex.Message, ex.StackTrace, "");
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class PrivacySettingsModel
     {
@@ -23,7 +23,6 @@ namespace sp_maui.Models
         public bool ViewLinksToRequestAddingYouAsFriend { get; set; }
         public bool ViewLinkTSendYouMsg { get; set; }
         public string Email { get; set; }
-
     }
 
     public class ProfilePrivacyTypesModel

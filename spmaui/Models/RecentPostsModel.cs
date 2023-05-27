@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class RecentPostsModel
     {
@@ -11,14 +11,12 @@ namespace sp_maui.Models
         public string memberName { get; set; }
         public string firstName { get; set; }
         public string memberID { get; set; }
-
         public string SelectedStateIcon { get; set; }
         public string DeselectedStateIcon { get; set; }
         public bool IsSelected { get; set; }
         public Action<RecentPostsModel> OnClickListener { get; set; }
         public List<RecentPostsModel> ChildItems { get; set; }
         public int ReplyCount { get; set; }
-
 
         private List<RecentPostChildModel> children;
         public List<RecentPostChildModel> getChildren()

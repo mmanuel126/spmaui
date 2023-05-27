@@ -1,12 +1,9 @@
 ﻿using System;
 
-namespace sp_maui.Models
+namespace spmaui.Models
 {
-
-
     public class RecentNewsModel
     {
-
         public string imageUrl { get; set; }
         public string headerText { get; set; }
         public DateTime postingDate { get; set; }

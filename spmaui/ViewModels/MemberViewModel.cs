@@ -1,6 +1,6 @@
 ﻿using System;
-using sp_maui.Services;
-using sp_maui.Models;
+using spmaui.Services;
+using spmaui.Models;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Collections.Generic;
@@ -9,15 +9,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
 
     public class MemberViewModel: INotifyPropertyChanged
     {
-        
         public ICommand RefreshCommand { get; set; }
 
-        private void OnRefreshCommandExecuted() => DoRefreshPosts();
+        private void OnRefreshCommandExecuted() => Task.Run(() => DoRefreshPosts());
        
         bool isRefreshing;
         public bool IsRefreshing
@@ -32,57 +31,21 @@ namespace sp_maui.ViewModels
             }
         }
 
-        ObservableCollection<RecentNewsModel> _News;
-        public ObservableCollection<RecentNewsModel> News
-        {
-            get
-            {
-                return _News;
-            }
-            set
-            {
-                _News = value;
-                OnPropertyChanged();
-            }
-        }
-
         async Task DoRefreshPosts()
         {
-
-            News.Clear();
-            News = new ObservableCollection<RecentNewsModel>();
-
             IsRefreshing = true;
-            //  DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-         //   this.News = await this.GetRecentNews();
-            //DependencyService.Get<ILoadingPageService>().HideLoadingPage();
+            
             IsRefreshing = false;
         }
 
-        private Members _membersSvc;
+        private readonly IMembers _membersSvc;
 
-        public MemberViewModel()
+        public MemberViewModel(IMembers membersSvc)
         {
             RefreshCommand = new   Command(OnRefreshCommandExecuted);
-            _membersSvc = new Members();
-            News = new ObservableCollection<RecentNewsModel>();
-            GetNewsAsync();
-
+            _membersSvc = membersSvc;
         }
-
-        async Task GetNewsAsync()
-        {
-            string jwtToken = Preferences.Get("AccessToken","");
-            List<RecentNewsModel> rn = await GetRecentNews();
-            //News = rn;
-        }
-
-        public async  Task<List<RecentNewsModel>> GetRecentNews()
-        {
-            string jwtToken = Preferences.Get("AccessToken","").ToString();
-            return  await _membersSvc.GetRecentNews(jwtToken);
-        }
-
+        /*
         public async Task<List<MemberProfileBasicInfoModel>> GetMemberBasicInfo(string memberID, string jwtToken)
         {
             int res;
@@ -90,7 +53,7 @@ namespace sp_maui.ViewModels
                 memberID = "0";
             return null; //await _membersSvc.GetMemberBasicInfo(int.Parse(memberID), jwtToken);
         }
-
+        */
         public async Task<MemberProfileContactInfoModel> GetMemberContactInfo(string memberID, string jwtToken)
         {
             int res;
@@ -127,32 +90,6 @@ namespace sp_maui.ViewModels
             return await _membersSvc.GetMemberAboutInfo(int.Parse(memberID), jwtToken);
         }
 
-        //public async Task<List<EventsModel>> GetMemberEventsInfo(string memberID, string jwtToken)
-        //{
-        //    int res;
-        //    if (int.TryParse(memberID, out res) == false)
-        //        memberID = "0";
-        //    return await _membersSvc.GetMemberEventsInfo(int.Parse(memberID), jwtToken);
-        //}
-
-        //public List<PhotosModel> GetAlbumPhotos(int albumID)
-        //{
-        //    //MemberAPIService srv = new MemberAPIService();
-        //    //return srv.GetAlbumPhotos(albumID);
-        //    return null;
-        //}
-
-        //public List<NetworksModel> GetMemberNetworkInfo(string memberID, string jwtToken)
-        //{
-        //    int res;
-        //    if (int.TryParse(memberID, out res) == false)
-        //        memberID = "0";
-
-        //    //NetworkWCFServices srv = new NetworkWCFServices();
-        //    //return srv.GetMyNetworks (int.Parse(memberID), jwtToken) ;
-        //    return null;
-        //}
-
         public async Task<List<ContactsModel>> GetMyContacts(string memberID, string v, string jwtToken)
         {
             int res;
@@ -160,18 +97,6 @@ namespace sp_maui.ViewModels
                 memberID = "0";
             return await _membersSvc.GetMyContacts(int.Parse(memberID), v, jwtToken);
         }
-
-
-        //public List<Models.PhotosAlbumModel> GetMemberAlbums(string memberID)
-        //{
-        //    //int res;
-        //    //if (int.TryParse(memberID, out res) == false)
-        //    //    memberID = "0";
-
-        //    //MemberAPIService srv = new MemberAPIService();
-        //    //return srv.GetMemberAlbums(int.Parse(memberID));
-        //    return null;
-        //}
 
         public async Task<string> IsFriendByContactID(string memberID, string contactID, string jwtToken)
         {
@@ -202,28 +127,31 @@ namespace sp_maui.ViewModels
         {
             return await _membersSvc.AuthenticateLGUser(username, pwd, rememberMe, screen);
         }
-
+ 
         public async Task<string> register(RegisterModel register)
         {
             return await _membersSvc.RegisterUser(register);
         }
 
-        public async Task<string> ResetPassword(string email, string jwt)
+        public async Task<string> ResetPassword(string email)
         {
-            return await _membersSvc.ResetPassword(email, jwt);
+            return await _membersSvc.ResetPassword(email);
         }
 
-        public async Task<string> IsResetCodeExpired(string code, string jwt)
+        public async Task<string> IsResetCodeExpired(string code)
         {
-            return await _membersSvc.IsResetCodeExpired(code, jwt);
+            return await _membersSvc.IsResetCodeExpired(code);
         }
 
-        public async Task<string> ChangePassword(RegisterModel register, string jwt)
+        public async Task<string> ChangePassword(RegisterModel register)
         {
-            return await _membersSvc.ChangePassword(register, jwt);
+            return await _membersSvc.ChangePassword(register);
         }
 
-
+        public async void LogException(string msg, string stackTrace, string jwt)
+        {
+            await _membersSvc.LogException(msg, stackTrace, jwt);
+        }
 
         #region INotifyPropertyChanged
 
@@ -235,8 +163,5 @@ namespace sp_maui.ViewModels
         }
 
         #endregion
-
     }
-
-
 }

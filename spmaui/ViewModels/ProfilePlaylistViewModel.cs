@@ -1,6 +1,6 @@
 ﻿using System;
-using sp_maui.Services;
-using sp_maui.Models;
+using spmaui.Services;
+using spmaui.Models;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Collections.Generic;
@@ -9,13 +9,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
     public class ProfilePlaylistViewModel : INotifyPropertyChanged
     {
         public ICommand RefreshCommand { get; set; }
 
-        private void OnRefreshCommandExecuted() => DoRefreshPosts();
+        private void OnRefreshCommandExecuted() => Task.Run(() => DoRefreshPosts());
 
         bool isRefreshing;
         public bool IsRefreshing
@@ -47,7 +47,6 @@ namespace sp_maui.ViewModels
 
         async Task DoRefreshPosts()
         {
-
             Videos.Clear();
             Videos = new List<YoutubeVideosListModel>();
 
@@ -56,14 +55,14 @@ namespace sp_maui.ViewModels
             IsRefreshing = false;
         }
 
-        private Members _membersSvc;
+        private IMembers _membersSvc;
 
-        public ProfilePlaylistViewModel()
+        public ProfilePlaylistViewModel(IMembers membersSvc)
         {
             RefreshCommand = new Command(OnRefreshCommandExecuted);
-            _membersSvc = new Members();
+            _membersSvc = membersSvc;
             Videos = new List<YoutubeVideosListModel>();
-            GetPlaylistVideosAsync();
+            Task.Run(() => GetPlaylistVideosAsync());
         }
 
         async Task GetPlaylistVideosAsync()
@@ -74,9 +73,29 @@ namespace sp_maui.ViewModels
 
         public async Task<List<YoutubeVideosListModel>> GetPlaylistVideos()
         {
-            string profileID = Preferences.Get("PlayListID","");
-            string jwtToken = Preferences.Get("AccessToken", "");
-            return await  _membersSvc.GetPlaylistVideos(profileID, jwtToken);
+            try
+            {
+                string profileID = Preferences.Get("PlayListID", "");
+                string jwtToken = Preferences.Get("AccessToken", "");
+                return await _membersSvc.GetPlaylistVideos(profileID, jwtToken);
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+                return new List<YoutubeVideosListModel>(); ;
+            }
         }
 
 

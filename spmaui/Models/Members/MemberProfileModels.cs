@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class MemberProfileBasicInfoModel
     {

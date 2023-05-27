@@ -5,53 +5,45 @@ using spmaui.ViewModels;
 
 namespace spmaui.Views;
 
-public partial class ProfilePage : ContentPage
+public partial class OthersProfilePage : ContentPage
 {
-    
-    public ProfilePage()
+    private readonly ProfileViewModel _profileViewModel;
+
+    public OthersProfilePage(ProfileViewModel profileViewModel)
     {
         InitializeComponent();
-        /*
-        Preferences.Set("UserID", obj.memberID);
-        Preferences.Set("UserEmail", obj.email);
-        Preferences.Set("UserName", obj.name);
-        Preferences.Set("UserTitle", obj.title);
-        Preferences.Set("AccessToken", obj.accessToken);
-
-        if (obj.picturePath != "")
-        {
-            Preferences.Set("UserImage", obj.picturePath);*/
-        imgProfile.Source = App.AppSettings.AppImagesURL + "/images/members/" + Preferences.Get("UserImage", "");
-        lblName.Text = Preferences.Get("UserName", "");
-        lblTitle.Text = Preferences.Get("UserTitle", "");
-
-        //var x = (ProfileViewModel)this.BindingContext;
-        //x.IsRefreshing = true;
+        _profileViewModel = profileViewModel;
+        BindingContext = profileViewModel;
+        imgProfile.Source = Preferences.Get("ProfileImage", "");
+        lblName.Text = Preferences.Get("ProfileName", "");
+        lblTitle.Text = Preferences.Get("ProfileTitle", "");
     }
-
 
     async void OnRefreshProfile_Clicked(object sender, EventArgs e)
     {
-        var x = (ProfileViewModel)this.BindingContext;
-        x.IsRefreshing = true;
-        await x.GetMemberBasicInfo();
-        await x.GetMemberContactInfo();
-        await x.GetMemberEducation();
-        await x.GetPlayList();
-        this.BindingContext = x;
-        x.IsRefreshing = false;
-        // Get current page
-        //var page = Navigation.NavigationStack.LastOrDefault();
-
-        // Load new page
-        // Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
-
-        
-       
-        //await Shell.Current.GoToAsync("profile", false);
-
-        // Remove old page
-        //Navigation.RemovePage(page);
+        try
+        {
+            var x = (ProfileViewModel)this.BindingContext;
+            x.IsRefreshing = true;
+            await x.GetMemberBasicInfo();
+            await x.GetMemberContactInfo();
+            await x.GetMemberEducation();
+            await x.GetPlayList();
+            this.BindingContext = x;
+            x.IsRefreshing = false;
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _profileViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
     }
 
     async void OnEducationSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -61,21 +53,8 @@ public partial class ProfilePage : ContentPage
         var current = e.CurrentSelection;
 
         MemberProfileEducationModel nm = (MemberProfileEducationModel)current[0];
-        await Launcher.OpenAsync(nm.schoolWebSite);
+        await Launcher.OpenAsync(nm.webSite);
         ((CollectionView)sender).SelectedItem = null;
-
-
-        //this.collectionView.SelectedItem = null;
-        //if (e.CurrentSelection.Count == 0)
-        //    return;
-        //var current = e.CurrentSelection;
-        //ContactsModel nm = (ContactsModel)current[0];
-
-        //Application.Current.Properties["ProfileID"] = nm.connectionID;
-        //Application.Current.Properties["ProfileName"] = nm.friendName;
-        //Application.Current.Properties["ProfileTitle"] = nm.titleDesc;
-        //Application.Current.Properties["ProfileImage"] = nm.picturePath;
-        //await Shell.Current.GoToAsync("profile");
     }
 
     async void OnPhotosButtonClicked(object sender, EventArgs args)
@@ -103,5 +82,10 @@ public partial class ProfilePage : ContentPage
         Preferences.Set("PlayListID", nm.Id);
         Preferences.Set("PlayListTitle", nm.Title);
         await Shell.Current.GoToAsync("playlistvideos");
+    }
+
+    async void OnTapGestureRecognizerTapped(object sender, EventArgs e)
+    {
+        await Shell.Current.Navigation.PopModalAsync();
     }
 }

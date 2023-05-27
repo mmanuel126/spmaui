@@ -10,9 +10,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Input;
-using sp_maui.Views;
+using TreeView.Maui.Core;
+//using spmaui.Views;
 
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     interface IChatMessageInfo
     {
@@ -24,7 +25,7 @@ namespace sp_maui.Models
     }
 
    // [Preserve(AllMembers = true)]
-    public class Conversation : IChatMessageInfo, INotifyPropertyChanged
+    public class Conversation : TreeViewNode, IChatMessageInfo, INotifyPropertyChanged
     {
         private int postID;
         private string message;

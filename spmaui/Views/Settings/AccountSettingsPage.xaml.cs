@@ -1,23 +1,27 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.Services;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.Services;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class AccountSettingsPage : ContentPage
 {
-	public AccountSettingsPage()
+    private readonly SettingsAccountViewModel _settingsAccountViewModel;
+
+    public AccountSettingsPage(SettingsAccountViewModel settingsAccountViewModel)
 	{
 		InitializeComponent();
-        imgMyProfile.Source = App.AppSettings.AppImagesURL + "/images/members/" + Preferences.Get("UserImage", "");
+        _settingsAccountViewModel = settingsAccountViewModel;
+        this.BindingContext = settingsAccountViewModel;
+
+        imgMyProfile.Source = App.AppSettings.AppMemberImagesURL + Preferences.Get("UserImage", "");
         lblMyName.Text = Preferences.Get("UserName","");
         lblMyTitle.Text = Preferences.Get("UserTitle", "");
-
         string email = Preferences.Get("UserEmail","");
         lblEmail.Text = "You will be emailed at " + email + " whenever someone:";
-        
+
         try
         {
             MediaPicker.CapturePhotoAsync();
@@ -28,26 +32,66 @@ public partial class AccountSettingsPage : ContentPage
         }
     }
 
+    void OnRefreshProfile_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var x = (SettingsAccountViewModel)this.BindingContext;
+            x.IsRefreshing = true;
+            x.GetAccountSettngsInfo();
+            x.GetSecurityQuestions();
+            x.GetAccountSettingsNotifications();
+            x.GetDeactivationReasons();
+            this.BindingContext = x;
+            x.IsRefreshing = false;
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+               DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
+
+    }
+
     async void PickImage_Clicked(System.Object sender, System.EventArgs e)
     {
-        var file = await MediaPicker.PickPhotoAsync();
-
-        if (file != null)
+        try
         {
-            var content = new MultipartFormDataContent();
-            file.FileName = "somename.png";
-            var stream = await file.OpenReadAsync();
-            content.Add(new StreamContent(stream), "file", file.FileName);
+            var file = await MediaPicker.PickPhotoAsync();
 
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
-                memberID = Preferences.Get("UserID", "");
+            if (file != null)
+            {
+                var content = new MultipartFormDataContent();
+                file.FileName = "somename.png";
+                var stream = await file.OpenReadAsync();
+                content.Add(new StreamContent(stream), "file", file.FileName);
+                string jwtToken = Preferences.Get("AccessToken", "");
+                string memberID = "0";
+                if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                    memberID = Preferences.Get("UserID", "");
 
-            Members c = new Members();
-            await c.UploadImage(memberID, content, jwtToken);
-            imgMyProfile.Source = ImageSource.FromStream(() => stream);
-
+                await _settingsAccountViewModel.UploadImage(content);
+                imgMyProfile.Source = ImageSource.FromStream(() => stream);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
@@ -68,184 +112,229 @@ public partial class AccountSettingsPage : ContentPage
                 if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
                     memberID = Preferences.Get("UserID", "");
 
-                Members c = new Members();
-                await c.UploadImage(memberID, content, jwtToken);
+                await _settingsAccountViewModel.UploadImage(content);
                 imgMyProfile.Source = ImageSource.FromStream(() => stream);
             }
         }
         catch (FeatureNotSupportedException){/*nothing to do here yet*/}
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
+
     }
 
     async void ChangeNameButton_Clicked(System.Object sender, System.EventArgs e)
     {
-        if (String.IsNullOrEmpty(FirstName.Text))
+        try
         {
-            await DisplayAlert("First Name Required...", "Please enter your first name!", "OK");
-            FirstName.Focus();
-        }
-        else if (String.IsNullOrEmpty(LastName.Text))
-        {
-            await DisplayAlert("Last Name Required...", "Please enter your last name!", "Ok");
-            LastName.Focus();
-        }
-        else
-        {
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            Settings m = new Settings();
+            if (String.IsNullOrEmpty(FirstName.Text))
+            {
+                await DisplayAlert("First Name Required...", "Please enter your first name!", "OK");
+                FirstName.Focus();
+            }
+            else if (String.IsNullOrEmpty(LastName.Text))
+            {
+                await DisplayAlert("Last Name Required...", "Please enter your last name!", "Ok");
+                LastName.Focus();
+            }
+            else
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                string memberID = "0";
+                if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                    memberID = Preferences.Get("UserID", "");
 
-            string jwtToken = Preferences.Get("AccessToken", "");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "") ))
-                memberID = Preferences.Get("UserID", "");
-
-            await m.SaveMemberNameInfo(memberID, FirstName.Text, MiddleName.Text, LastName.Text, jwtToken);
-            DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-            await DisplayAlert("Name Saved...", "Name was updated successfully!", "Ok");
+                await _settingsAccountViewModel.SaveMemberNameInfo(FirstName.Text, MiddleName.Text, LastName.Text);
+                await DisplayAlert("Name Saved...", "Name was updated successfully!", "Ok");
+            }
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
     async void ChangePwdButton_Clicked(System.Object sender, System.EventArgs e)
     {
-        if (String.IsNullOrEmpty(CurrentPassord.Text))
+        try
         {
-            await DisplayAlert("Current Password Required...", "Please enter your current password!", "OK");
-            CurrentPassord.Focus();
+            if (String.IsNullOrEmpty(CurrentPassord.Text))
+            {
+                await DisplayAlert("Current Password Required...", "Please enter your current password!", "OK");
+                CurrentPassord.Focus();
+            }
+            else if (CurrentPassord.Text != Preferences.Get("PWD", ""))
+            {
+                await DisplayAlert("Check Password...", "The password you entered is not your vaild password. Please enter correct password!", "Ok");
+                CurrentPassord.Focus();
+            }
+            else if (String.IsNullOrEmpty(NewPassword.Text))
+            {
+                await DisplayAlert("New Password Required...", "Please enter the new password!", "Ok");
+                NewPassword.Focus();
+            }
+            else if (String.IsNullOrEmpty(ConfirmPassword.Text))
+            {
+                await DisplayAlert("Confirm Password Required...", "Please enter new password to confirm!", "Ok");
+                ConfirmPassword.Focus();
+            }
+            else if (!NewPassword.Text.Contains(ConfirmPassword.Text))
+            {
+                await DisplayAlert("Confirm password...", "confirm password must be the same as new password!", "Ok");
+                ConfirmPassword.Focus();
+            }
+            else if (NewPassword.Text.Length < 5)
+            {
+                await DisplayAlert("New password Length...", "New password Your new password must be between 5-12 characters in length. !", "Ok");
+                NewPassword.Focus();
+            }
+            else
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                string memberID = "0";
+                if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                    memberID = Preferences.Get("UserID", "");
+                await _settingsAccountViewModel.SavePasswordInfo(NewPassword.Text);
+                CurrentPassord.Text = ""; NewPassword.Text = ""; ConfirmPassword.Text = "";
+                await DisplayAlert("Change Password...", "Password was changed successfully!", "Ok");
+            }
         }
-        else if (CurrentPassord.Text != Preferences.Get("PWD",""))
+        catch (Exception ex)
         {
-            await DisplayAlert("Check Password...", "The password you entered is not your vaild password. Please enter correct password!", "Ok");
-            CurrentPassord.Focus();
-        }
-        else if (String.IsNullOrEmpty(NewPassword.Text))
-        {
-            await DisplayAlert("New Password Required...", "Please enter the new password!", "Ok");
-            NewPassword.Focus();
-        }
-        else if (String.IsNullOrEmpty(ConfirmPassword.Text))
-        {
-            await DisplayAlert("Confirm Password Required...", "Please enter new password to confirm!", "Ok");
-            ConfirmPassword.Focus();
-        }
-        else if (!NewPassword.Text.Contains(ConfirmPassword.Text))
-        {
-            await DisplayAlert("Confirm password...", "confirm password must be the same as new password!", "Ok");
-            ConfirmPassword.Focus();
-        }
-        else if (NewPassword.Text.Length < 5)
-        {
-            await DisplayAlert("New password Length...", "New password Your new password must be between 5-12 characters in length. !", "Ok");
-            NewPassword.Focus();
-        }
-
-        else
-        {
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            Settings m = new Settings();
-
-            string jwtToken = Preferences.Get("AccessToken","");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID","")))
-                memberID = Preferences.Get("UserID","");
-
-            await m.SavePasswordInfo(memberID, NewPassword.Text, jwtToken);
-            DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-            await DisplayAlert("Name Saved...", "Name was updated successfully!", "Ok");
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
     async void SecQuestButton_Clicked(System.Object sender, System.EventArgs e)
     {
-        if (Question.SelectedIndex == 0)
+        try
         {
-            await DisplayAlert("Question Required...", "Please select a question from list!", "OK");
-            Question.Focus();
+            if (Question.SelectedIndex == 0)
+            {
+                await DisplayAlert("Question Required...", "Please select a question from list!", "OK");
+                Question.Focus();
+            }
+            else if (String.IsNullOrEmpty(Answer.Text))
+            {
+                await DisplayAlert("Answer Required...", "Please enter answer for the question!", "Ok");
+                Answer.Focus();
+            }
+            else
+            {
+                await _settingsAccountViewModel.SaveSecurityQuestionInfo(Question.SelectedIndex.ToString(), Answer.Text);
+                await DisplayAlert("Security Question Saved...", "Security question and answer was saved successfully!", "Ok");
+            }
         }
-        else if (String.IsNullOrEmpty(Answer.Text))
+        catch (Exception ex)
         {
-            await DisplayAlert("Answer Required...", "Please enter answer for the question!", "Ok");
-            Answer.Focus();
-        }
-        else
-        {
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            var vm = (SettingsAccountViewModel)BindingContext;
-            await vm.SaveSecurityQuestionInfo(Question.SelectedIndex.ToString(), Answer.Text);
-            DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-            await DisplayAlert("Security Question Saved...", "Security question and answer was saved successfully!", "Ok");
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
     private async void SaveNotificationsButton_Clicked(object sender, EventArgs e)
     {
-        DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-        NotificationsSettingModel mod = new NotificationsSettingModel();
-        mod.lG_SendMsg = SendMessage.IsToggled;
-        mod.lG_AddAsFriend = AddAsContact.IsToggled;
-        mod.lG_ConfirmFriendShipRequest = ContactRequest.IsToggled;
-        mod.hE_RepliesToYourHelpQuest = HelpQuestions.IsToggled;
-        mod.eV_DateChanged = false;
-        mod.eV_InviteToEvent = false;
-        mod.gP_ChangesTheNameOfGroupYouBelong = false;
-        mod.gP_InviteYouToJoin = false;
-        mod.gP_MakesYouAGPAdmin = false;
-        mod.gP_RepliesToYourDiscBooardPost = false;
-        mod.MemberID = int.Parse(Preferences.Get("UserID", ""));
-
-        var vm = (SettingsAccountViewModel)BindingContext;
-        await vm.SaveNotificationSettings(mod);
-        DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-        await DisplayAlert("Notifications Settings Saved", "The notifications settings were successfully saved!", "Ok");
-
+        try
+        {
+            NotificationsSettingModel mod = new NotificationsSettingModel();
+            mod.lG_SendMsg = SendMessage.IsToggled;
+            mod.lG_AddAsFriend = AddAsContact.IsToggled;
+            mod.lG_ConfirmFriendShipRequest = ContactRequest.IsToggled;
+            mod.hE_RepliesToYourHelpQuest = HelpQuestions.IsToggled;
+            mod.eV_DateChanged = false;
+            mod.eV_InviteToEvent = false;
+            mod.gP_ChangesTheNameOfGroupYouBelong = false;
+            mod.gP_InviteYouToJoin = false;
+            mod.gP_MakesYouAGPAdmin = false;
+            mod.gP_RepliesToYourDiscBooardPost = false;
+            mod.MemberID = int.Parse(Preferences.Get("UserID", ""));
+            await _settingsAccountViewModel.SaveNotificationSettings(mod);
+            await DisplayAlert("Notifications Settings Saved", "The notifications settings were successfully saved!", "Ok");
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
     }
 
     async void DeactivateButton_Clicked(System.Object sender, System.EventArgs e)
     {
-        if (Reason.SelectedIndex == -1)
+        try
         {
-            await DisplayAlert("Reason for Leaving Required...", "Please select from the list of reasons you are leaving sportsprofile!", "OK");
-            Reason.Focus();
+            if (Reason.SelectedIndex == -1)
+            {
+                await DisplayAlert("Reason for Leaving Required...", "Please select from the list of reasons you are leaving sportsprofile!", "OK");
+                Reason.Focus();
+            }
+            else
+            {
+                string jwtToken = Preferences.Get("AccessToken", "");
+                string memberID = "0";
+                if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                    memberID = Preferences.Get("UserID", "");
+                await _settingsAccountViewModel.DeactivateAccount(Reason.SelectedIndex.ToString(), Explanation.Text);
+                await DisplayAlert("Deactivating  Account...", "Your account was successfully deactivated!", "Ok");
+                Preferences.Get("IsUserLogin", "false");
+                Preferences.Get("UserID", null);
+                Preferences.Get("UserEmail", null);
+                Preferences.Get("UserName", null);
+                Preferences.Get("UserTitle", null);
+                Preferences.Get("AccessToken", null);
+                App.Current.MainPage = new spmaui.Views.Account.LoginPage(new MemberViewModel(new Services.Members()));
+            }
         }
-
-        else
+        catch (Exception ex)
         {
-            //DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            Settings s = new Settings();
-            string jwtToken = Preferences.Get("AccessToken","");
-            string memberID = "0";
-            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
-                memberID = Preferences.Get("UserID", "");
-
-            await s.DeactivateAccount(memberID, Reason.SelectedIndex.ToString(), Explanation.Text, jwtToken);
-            //DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-            await DisplayAlert("Deactivating  Account...", "Your account was successfully deactivated!", "Ok");
-
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            Preferences.Get("IsUserLogin","false");
-            Preferences.Get("UserID",null);
-            Preferences.Get("UserEmail",null);
-            Preferences.Get("UserName",null);
-            Preferences.Get("UserTitle",null);
-            Preferences.Get("AccessToken",null);
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-            App.Current.MainPage = new sp_maui.Views.Account.LoginPage();
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _settingsAccountViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
-
-    async void OnCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.Count == 0)
-            return;
-        var current = e.CurrentSelection;
-        RecentNewsModel nm = (RecentNewsModel)current[0];
-        await Launcher.OpenAsync(nm.navigateUrl);
-        ((CollectionView)sender).SelectedItem = null;
-
-        // string monkeyName = (e.CurrentSelection.FirstOrDefault() as Animal).Name;
-        // This works because route names are unique in this application.
-        //  await Shell.Current.GoToAsync($"monkeydetails?name={monkeyName}");
-        // The full route is shown below.
-        // await Shell.Current.GoToAsync($"//animals/monkeys/monkeydetails?name={monkeyName}");
-    }
-
     
 }

@@ -1,15 +1,27 @@
 ﻿using System;
-using sp_maui.Services;
-using sp_maui.Models;
+using spmaui.Services;
+using spmaui.Models;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
     public class SettingsPrivacyViewModel: INotifyPropertyChanged
     {
+        bool isRefreshing;
+        public bool IsRefreshing
+        {
+            get => isRefreshing;
+            set
+            {
+                isRefreshing = value;
+                OnPropertyChanged(nameof(IsRefreshing));
+            }
+        }
+
         PrivacySettingsModel _PrivacySettingsInfo;
         public PrivacySettingsModel PrivacySettingsInfo
         {
@@ -38,13 +50,35 @@ namespace sp_maui.ViewModels
             }
         }
 
-        public SettingsPrivacyViewModel()
+        private readonly ISettings _settingsSvc;
+
+        public SettingsPrivacyViewModel(ISettings settingsSvc)
         {
-            GetPrivacySettingsInfo();
-            GetProfilePrivacyTypes();
+            try
+            {
+                _settingsSvc = settingsSvc;
+                GetPrivacySettingsInfo();
+                GetProfilePrivacyTypes();
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        LogException(ex.Message, ex.StackTrace, "");
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                    }
+                });
+            }
         }
 
-        private async void GetPrivacySettingsInfo()
+        public async void GetPrivacySettingsInfo()
         {
             string jwtToken = Preferences.Get("AccessToken", "");
             string memberID = "0";
@@ -52,11 +86,10 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            PrivacySettingsInfo = await s.GetProfileSettings(memberID, jwtToken);
+            PrivacySettingsInfo = await _settingsSvc.GetProfileSettings(memberID, jwtToken);
         }
 
-        private  void GetProfilePrivacyTypes()
+        public void GetProfilePrivacyTypes()
         {
             List<ProfilePrivacyTypesModel> lst = new List<ProfilePrivacyTypesModel>();
             var question = new ProfilePrivacyTypesModel { Id = 0, Desc = "Select..." }; lst.Add(question);
@@ -67,7 +100,7 @@ namespace sp_maui.ViewModels
             ProfilePrivacyTypes = lst;
         }
 
-        public async Task SaveProfileSettings(PrivacySettingsModel body)
+        public async void SaveProfileSettings(PrivacySettingsModel body)
         {
             string jwtToken = Preferences.Get("AccessToken", "");
             string memberID = "0";
@@ -75,10 +108,24 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            await s.SaveProfileSettings (memberID, body,  jwtToken);
+            await _settingsSvc.SaveProfileSettings (memberID, body,  jwtToken);
         }
 
+        public async void SaveSearchSettings(PrivacySettingsModel psm)
+        {
+            Settings s = new Settings();
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+                memberID = Preferences.Get("UserID", "");
+
+            await s.SaveSearchSettings(memberID, psm, jwtToken);
+        }
+
+        public async void LogException(string msg, string stackTrace, string jwt)
+        {
+            await _settingsSvc.LogException(msg, stackTrace, jwt);
+        }
 
         #region INotifyPropertyChanged
 

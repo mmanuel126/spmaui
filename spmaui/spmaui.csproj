@@ -12,7 +12,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 
 		<!-- Display name -->
-		<ApplicationTitle>spmaui</ApplicationTitle>
+		<ApplicationTitle>Sport Profiles</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.spmaui</ApplicationId>
@@ -30,18 +30,15 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios|AnyCPU'">
+	  <CreatePackage>false</CreatePackage>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-ios|AnyCPU'">
+	  <CreatePackage>false</CreatePackage>
+	</PropertyGroup>
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
-
-		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
-
-		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
-
-		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
@@ -50,6 +47,165 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+		<PackageReference Include="Syncfusion.Maui.Core" Version="20.4.51" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="4.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+		<PackageReference Include="RestSharp" Version="108.0.3" />
+		<PackageReference Include="Syncfusion.Maui.Inputs" Version="20.4.51" />
+		<PackageReference Include="Syncfusion.Maui.TabView" Version="20.4.51" />
+		<PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
+		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="1.0.2" />
+		<PackageReference Include="YoutubeExplode" Version="6.2.10" />
+		<PackageReference Include="TreeView.Maui" Version="1.0.5" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="Models\" />
+	  <None Remove="Models\Contacts\" />
+	  <None Remove="Models\Members\" />
+	  <None Remove="ViewModels\" />
+	  <None Remove="Views\" />
+	  <None Remove="Services\" />
+	  <None Remove="Views\Account\" />
+	  <None Remove="Views\MemberProfile\" />
+	  <None Remove="Controls\" />
+	  <None Remove="Resources\Images\logo100.jpg" />
+	  <None Remove="Resources\AppIcon\" />
+	  <None Remove="Resources\Splash\" />
+	  <None Remove="Resources\Splash\splash.svg" />
+	  <None Remove="Resources\AppIcon\appicon.svg" />
+	  <None Remove="Views\Home\" />
+	  <None Remove="Resources\Images\refresh.png" />
+	  <None Remove="Resources\Images\editprofile7.png" />
+	  <None Remove="Resources\Images\logoff3.png" />
+	  <None Remove="Resources\Images\messengerv2.png" />
+	  <None Remove="Resources\Images\news.png" />
+	  <None Remove="Resources\Images\postv2.png" />
+	  <None Remove="Resources\Images\privacy3.png" />
+	  <None Remove="Resources\Images\profilev2.png" />
+	  <None Remove="Views\Connection\" />
+	  <None Remove="Views\Messages\" />
+	  <None Remove="Views\Settings\" />
+	  <None Remove="Resources\Images\reject.png" />
+	  <None Remove="Views\OthersProfile\" />
+	  <None Remove="Resources\Images\search100.png" />
+	  <None Remove="Resources\Images\actsettings2.png" />
+	  <None Remove="Resources\Images\backarrow.png" />
+	  <None Remove="Helper\" />
+	  <None Remove="Resources\Images\send.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Models\" />
+	  <Folder Include="Models\Contacts\" />
+	  <Folder Include="Models\Members\" />
+	  <Folder Include="ViewModels\" />
+	  <Folder Include="Views\" />
+	  <Folder Include="Services\" />
+	  <Folder Include="Views\Account\" />
+	  <Folder Include="Views\MemberProfile\" />
+	  <Folder Include="Controls\" />
+	  <Folder Include="Resources\AppIcon\" />
+	  <Folder Include="Resources\Splash\" />
+	  <Folder Include="Views\Home\" />
+	  <Folder Include="Views\Connection\" />
+	  <Folder Include="Views\Messages\" />
+	  <Folder Include="Views\Settings\" />
+	  <Folder Include="Views\OthersProfile\" />
+	  <Folder Include="Helper\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\ChangePasswordPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\ConfirmRegisterPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\ConfirmResetPwdPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\LoginPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\RecoverPwdPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\RegisterPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\Account\ResetPasswordPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfileAddEducationPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfileEditPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfilePage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfilePlaylistPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfileUpdateEducationPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MemberProfile\ProfileVideoPlayerPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Controls\FlyoutFooter.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Controls\FlyoutHeader.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Home\NewsPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Connection\ConnectionTabsPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Messages\MessageDetailsPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Messages\MessageNewPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Messages\MessagePage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Settings\AccountSettingsPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Settings\LogoutPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Settings\PrivacySettingsPage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	  <MauiXaml Condition=" '$(EnableDefaultXamlItems)' == 'true' " Update="Views\OthersProfile\ProfilePage.xaml">
+	    <SubType></SubType>
+	  </MauiXaml>
+	</ItemGroup>
+	<ItemGroup>
+	  <BundleResource Include="Resources\Images\logo100.jpg" />
+	  <BundleResource Include="Resources\Images\refresh.png" />
+	  <BundleResource Include="Resources\Images\editprofile7.png" />
+	  <BundleResource Include="Resources\Images\logoff3.png" />
+	  <BundleResource Include="Resources\Images\messengerv2.png" />
+	  <BundleResource Include="Resources\Images\news.png" />
+	  <BundleResource Include="Resources\Images\postv2.png" />
+	  <BundleResource Include="Resources\Images\privacy3.png" />
+	  <BundleResource Include="Resources\Images\profilev2.png" />
+	  <BundleResource Include="Resources\Images\search100.png" BaseSize="25,25" />
+	  <BundleResource Include="Resources\Images\actsettings2.png" />
+	  <BundleResource Include="Resources\Images\backarrow.png" />
+	  <BundleResource Include="Resources\Images\send.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="White" BaseSize="128,128" />
+	</ItemGroup>
+	<ItemGroup>
+	  <MauiIcon Include="Resources\AppIcon\appicon.svg" />
+	</ItemGroup>
 </Project>

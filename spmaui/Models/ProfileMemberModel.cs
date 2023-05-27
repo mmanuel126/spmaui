@@ -1,5 +1,5 @@
 ﻿using System;
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class SportsModel
     {

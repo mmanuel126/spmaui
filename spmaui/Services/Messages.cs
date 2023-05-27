@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using sp_maui.Models;
+using spmaui.Models;
 using RestSharp;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
-namespace sp_maui.Services
+namespace spmaui.Services
 {
-    public class Messages
+    public class Messages : IMessages
     {
 
         static readonly string MESSAGES_SERVICE_URI = App.AppSettings.WebServiceURL + "message/";
+        private static readonly string COMMON_SERVICE_URI = App.AppSettings.WebServiceURL + "common/";
+
         private RestClient _restClient;
 
         public Messages()
         {
             _restClient = new RestClient(MESSAGES_SERVICE_URI);
-           
+
         }
 
         /// <summary>
@@ -29,8 +32,7 @@ namespace sp_maui.Services
         public async Task<List<SystemNotificationsModel>> GetNotifications(int memberID, string showType, string jwtToken)
         {
             List<SystemNotificationsModel> lst = new List<SystemNotificationsModel>();
-            var request = new RestRequest("GetNotifications" , Method.Get);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
+            var request = new RestRequest("GetNotifications", Method.Get);
             request.AddHeader("authorization", "Bearer " + jwtToken);
             request.AddParameter("memberID", memberID);
             request.AddParameter("showType", showType);
@@ -51,12 +53,10 @@ namespace sp_maui.Services
         /// <returns></returns>
         public async Task<string> SendMessage(string from, string toWho, string sub, string msg, string jwtToken)
         {
-            //var client = new RestClient(BASE_ADDRESS);
             string resource = "CreateMessage?from=" + from + "&to=" + toWho + "&subject=" + sub + "&body=" + msg;
             var request = new RestRequest(resource, Method.Post);
             request.AddParameter("attachment", "");
             request.AddParameter("original", "");
-           // request.AddHeader("Content-Type", "application/json; charset=utf-8");
             request.AddHeader("authorization", "Bearer " + jwtToken);
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
@@ -76,9 +76,7 @@ namespace sp_maui.Services
             var request = new RestRequest("GetMemberMessages/" + memberID.ToString(), Method.Get);
             request.AddParameter("type", type);
             request.AddParameter("showType", showType);
-           // request.AddHeader("Content-Type", "application/json; charset=utf-8");
             request.AddHeader("authorization", "Bearer " + jwtToken);
-
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
             List<MessageInfoModel> dynJson = JsonConvert.DeserializeObject<List<MessageInfoModel>>(content);
@@ -87,11 +85,18 @@ namespace sp_maui.Services
             {
                 if (string.IsNullOrEmpty(dynJson[i].senderImage))
                 {
-                    dynJson[i].senderImage = App.AppSettings.AppImagesURL + "/images/members/default.png";
+                    dynJson[i].senderImage = App.AppSettings.AppMemberImagesURL + "default.png";
                 }
-                else {
-                    dynJson[i].senderImage = App.AppSettings.AppImagesURL + "/images/members/" + dynJson[i].senderImage;
+                else
+                {
+                    dynJson[i].senderImage = App.AppSettings.AppMemberImagesURL + dynJson[i].senderImage;
                 }
+
+                if (string.IsNullOrEmpty(dynJson[i].senderTitle))
+                {
+                    dynJson[i].senderTitle = "Unknown Title";
+                }
+
             }
             return dynJson;
         }
@@ -109,9 +114,7 @@ namespace sp_maui.Services
             List<MessageInfoModel> info = new List<MessageInfoModel>();
             var request = new RestRequest("GetMessageInfoByID/" + msgID.ToString(), Method.Get);
             request.AddParameter("folder", folder);
-           // request.AddHeader("Content-Type", "application/json; charset=utf-8");
             request.AddHeader("authorization", "Bearer " + jwtToken);
-
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
             List<MessageDetails> dynJson = JsonConvert.DeserializeObject<List<MessageDetails>>(content);
@@ -120,11 +123,11 @@ namespace sp_maui.Services
             {
                 if (string.IsNullOrEmpty(dynJson[i].SenderPicture))
                 {
-                    dynJson[i].SenderPicture = App.AppSettings.AppImagesURL + "/images/members/default.png";
+                    dynJson[i].SenderPicture = App.AppSettings.AppMemberImagesURL + "default.png";
                 }
                 else
                 {
-                    dynJson[i].SenderPicture = App.AppSettings.AppImagesURL + "/images/members/" + dynJson[i].SenderPicture;
+                    dynJson[i].SenderPicture = App.AppSettings.AppMemberImagesURL + dynJson[i].SenderPicture;
                 }
             }
             return dynJson;
@@ -137,15 +140,13 @@ namespace sp_maui.Services
         /// <param name="msgID"></param>
         /// <param name="folder"></param>
         /// <returns></returns>
-        public async Task <string> ToggleMessageState(string state, string msgID, string folder)
+        public async Task<string> ToggleMessageState(string state, string msgID, string folder)
         {
             var request = new RestRequest("ToggleMessageState", Method.Put);
             request.AddParameter("msgID", msgID);
             request.AddParameter("folder", folder);
-
-            RestResponse response =await _restClient.ExecuteAsync(request);
+            RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
-
             var dynJson = JsonConvert.DeserializeObject<string>(content);
             return dynJson.ToString();
         }
@@ -162,7 +163,7 @@ namespace sp_maui.Services
             var request = new RestRequest("DeleteMessage/" + msgID.ToString(), Method.Delete);
             request.AddHeader("Content-Type", "application/json; charset=utf-8");
             request.AddHeader("authorization", "Bearer " + jwtToken);
-            
+
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
             return content;
@@ -179,13 +180,32 @@ namespace sp_maui.Services
             var request = new RestRequest("DeleteNotification", Method.Delete);
             request.AddParameter("memberID", memberID);
             request.AddParameter("notificationID", notificationID);
-
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
-
             var dynJson = JsonConvert.DeserializeObject<string>(content);
             return dynJson.ToString();
         }
 
+        public async Task LogException(string msg, string stackTrace, string jwt)
+        {
+            msg = "MOBILE ERROR: " + msg; stackTrace = "MOBILE ERROR: " + stackTrace;
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            var requestUrl = COMMON_SERVICE_URI + "Logs?message=" + msg + "&stack=" + stackTrace;
+            var requestContent = new StringContent("Encoding.UTF8, application/json");
+            var response = await httpClient.PostAsync(requestUrl, requestContent);
+        }
+    }
+
+    public interface IMessages
+    {
+        Task<List<SystemNotificationsModel>> GetNotifications(int memberID, string showType, string jwtToken);
+        Task<string> SendMessage(string from, string toWho, string sub, string msg, string jwtToken);
+        Task<List<MessageInfoModel>> GetMemberMessages(int memberID, string type, string showType, string jwtToken);
+        Task<List<MessageDetails>> GetMessageInfoByID(string msgID, string folder, string jwtToken);
+        Task<string> ToggleMessageState(string state, string msgID, string folder);
+        Task<string> DeleteMessage(string msgID, string folder, string jwtToken);
+        Task<string> DeleteNotifications(int memberID, string notificationID);
+        Task LogException(string msg, string stackTrace, string jwt);
     }
 }

@@ -10,9 +10,13 @@ namespace spmaui.Views.Account
 {
     public partial class LoginPage : ContentPage
     {
-        public LoginPage()
+        private readonly MemberViewModel _memberViewModel;
+
+        public LoginPage(MemberViewModel memberViewModel)
         {
             InitializeComponent();
+            _memberViewModel = memberViewModel;
+            this.BindingContext = _memberViewModel;
             string year = DateTime.Now.Year.ToString();
             lblCopyright.Text = "© " + year + " SportProfiles.net."; 
 
@@ -20,14 +24,14 @@ namespace spmaui.Views.Account
 
         private async void OnTapGestureRecognizerTapped_ForgetLabel(object sender, EventArgs e)
         {
-            var recoverPage = new RecoverPwdPage();
-            await Navigation.PushModalAsync(new NavigationPage(recoverPage));
+            var recoverPage = new RecoverPwdPage(_memberViewModel);
+            await Navigation.PushModalAsync(recoverPage);
         }
 
         private async void RegisterButton_Clicked(object sender, EventArgs e)
         {
-            var registerPage = new RegisterPage();
-            await Navigation.PushModalAsync(new NavigationPage(registerPage));
+            var registerPage = new RegisterPage(_memberViewModel);
+            await Navigation.PushModalAsync(registerPage);
         }
 
         private async void LoginButton_Clicked(object sender, EventArgs e)
@@ -41,7 +45,7 @@ namespace spmaui.Views.Account
                 await DisplayAlert("Email Required...", "Please enter your email address!", "Ok");
                 txtEmail.Focus();
             }
-            else if (IsEmailValid(email))
+            else if (!IsEmailValid(email))
             {
                 await DisplayAlert("Invalid Email...", "Please enter a valid email!", "Ok");
                 txtEmail.Focus();
@@ -62,8 +66,7 @@ namespace spmaui.Views.Account
                     ai.IsRunning = true;
 
                     //call service via vm and do things
-                    MemberViewModel vm = new MemberViewModel();
-                    var obj = await vm.AuthenticateLGUser(email, pwd, "", "");
+                    var obj = await _memberViewModel.AuthenticateLGUser(email, pwd, "", "");
 
                     if (!String.IsNullOrEmpty(obj.memberID))
                     {
@@ -75,6 +78,7 @@ namespace spmaui.Views.Account
                             Preferences.Set("UserName", obj.name);
                             Preferences.Set("UserTitle", obj.title);
                             Preferences.Set("AccessToken", obj.accessToken);
+                            Preferences.Set("ProfileLoginUser", "yes");
 
                             if (obj.picturePath != "")
                             {
@@ -92,7 +96,7 @@ namespace spmaui.Views.Account
                         else if (obj.currentStatus == "3") //deactivated
                         {
                             aiLayout.IsVisible = false;
-                            await DisplayAlert("Deactivated Account..", "Your account was deactivated recently or sometime ago. To re-activate your account, please goto www.sportsprofile.net/activate.", "Ok");
+                            await DisplayAlert("Deactivated Account..", "Your account was deactivated recently or sometime ago. To re-activate your account, please log in the site using the link www.sportsprofile.net and follow the direction provided.", "Ok");
                         }
                     }
                     else
@@ -102,10 +106,19 @@ namespace spmaui.Views.Account
                         await DisplayAlert("Incorrect Email/Password..", "The password or email you entered is incorrect. Try again.", "Ok");
                     }
                 }
-                catch (FormatException)
+                catch (Exception ex)
                 {
                     aiLayout.IsVisible = false;
-                    await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        _memberViewModel.LogException(ex.Message, ex.StackTrace,"");
+                    }
                 }
             }
         }

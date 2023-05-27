@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class FileManager : INotifyPropertyChanged
     {

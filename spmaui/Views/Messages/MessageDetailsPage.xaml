@@ -1,19 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:sp_maui.Controls"
-             xmlns:local="clr-namespace:sp_maui.ViewModels"
-             x:Class="sp_maui.Views.MessageDetailsPage"
+             x:Class="spmaui.Views.MessageDetailsPage"
              xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
-             ios:Page.UseSafeArea="True" xmlns:busyIndicator="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
+             ios:Page.UseSafeArea="True"
+             xmlns:busyIndicator="clr-namespace:Syncfusion.Maui.Core;assembly=Syncfusion.Maui.Core"
              Title="Message Details">
-
-    <ContentPage.BindingContext>
-        <local:MessageDetailsViewModel/>
-    </ContentPage.BindingContext>
 
     <ContentPage.Resources>
         <ResourceDictionary>
+
             <Style x:Key="NameLabel" TargetType="Label">
                 <Setter Property="FontSize" Value="18" />
                 <Setter Property="FontAttributes" Value="Bold" />
@@ -34,26 +30,9 @@
                 <Setter Property="Orientation" Value="Horizontal" />
             </Style>
 
-
             <Style x:Key="imageStyle" TargetType="Image">
                 <Setter Property="WidthRequest" Value="8" />
                 <Setter Property="HeightRequest" Value="8" />
-            </Style>
-
-            <Style x:Key="FrameCardViewStyle" TargetType="Frame">
-                <Setter Property="CornerRadius" Value="5" />
-                <Setter Property="Margin" Value="5" />
-                <Setter Property="Padding" Value="5" />
-                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
-                <!-- Setter Property="OutlineColor" Value="LightGray" / -->
-                <Setter Property="BorderColor" Value="LightGray" />
-                <Setter Property="HasShadow" Value="True" />
-            </Style>
-
-            <Style x:Key="itemsCardViewStackLayoutStyle" TargetType="StackLayout">
-                <Setter Property="Margin" Value="5" />
-                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
-                <Setter Property="Spacing" Value="8" />
             </Style>
 
             <Style x:Key="detailsStackLayout" TargetType="StackLayout">
@@ -61,7 +40,6 @@
                 <Setter Property="VerticalOptions" Value="FillAndExpand" />
                 <Setter Property="Spacing" Value="2" />
             </Style>
-
 
             <Style x:Key="profileImageStyle" TargetType="Image">
                 <Setter Property="WidthRequest" Value="48" />
@@ -85,20 +63,14 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <!-- Shell.SearchHandler>
-        <controls:SPSearchHandler Placeholder="Search..."
-         ShowsResults="true"
-         DisplayMemberName="Name" />
-    </Shell.SearchHandler -->
-
-    <StackLayout Spacing="0" BackgroundColor="SeaShell">
+    <StackLayout Spacing="0" BackgroundColor="White">
 
         <StackLayout Padding="0,30,0,0">
             <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}" Padding="10,0,0,10">
                 <Frame Style="{StaticResource profileImageFrameStyle}">
                     <Image x:Name="imgProfile" Style="{StaticResource profileImageStyle}" Source="{Binding MessageDetails.SenderPicture}" />
                 </Frame>
-                <StackLayout Style="{StaticResource detailsStackLayout}" Padding="0,10,0,-10">
+                <StackLayout Style="{StaticResource detailsStackLayout}" Padding="0, 0,0,-10">
                     <Label x:Name="lblName" Text="{Binding MessageDetails.From}"  Style="{StaticResource NameLabel}" />
                     <StackLayout Style="{StaticResource imageLableStackLayout}">
                         <Label x:Name="lblTitle" Text=" " Style="{StaticResource TitleLabelStyle}" />
@@ -113,7 +85,6 @@
             </StackLayout>
             <BoxView HeightRequest="1" BackgroundColor="LightGray" VerticalOptions="End"/>
         </StackLayout>
-
 
         <StackLayout Padding="0,10,0,0">
             <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}" Padding="10,0,0,0">
@@ -147,7 +118,7 @@
         <StackLayout Padding="0,10,0,0">
 
             <Label Text="  Reply:" FontAttributes="Bold"></Label>
-            <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}" Padding="10,0,0,0">
+            <StackLayout Style="{StaticResource itemsInsideCardViewStackLayoutStyle}" Padding="10,0,10,0">
 
                 <StackLayout Style="{StaticResource detailsStackLayout}" Padding="0,10,0,10">
                     <busyIndicator:SfTextInputLayout Grid.Row="2" x:Name="txtMsg"
@@ -157,33 +128,32 @@
                                            BackgroundColor="White"
                                            OutlineCornerRadius="22"
                                            Padding="8,0,8,8">
-                        <Entry Placeholder="Reply to message"
-                       FontSize="13"
-                       Text="{Binding MessageText}">
+                        <Entry Placeholder="Reply to message" PlaceholderColor="Black"
+                          FontSize="13"
+                          Text="{Binding MessageText}">
                         </Entry>
-                        <busyIndicator:SfTextInputLayout.TrailingView>
-                            <Image x:Name="sendimagename"
-                            HeightRequest="25" 
-                            WidthRequest="25">
-                                <Image.Source>
-                                    <FileImageSource File="send.png"/>
-                                </Image.Source>
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding SendMessageCommand}"
-                                CommandParameter="{Binding}"/>
-                                </Image.GestureRecognizers>
-                            </Image>
-                        </busyIndicator:SfTextInputLayout.TrailingView>
                     </busyIndicator:SfTextInputLayout>
                 </StackLayout>
             </StackLayout>
             <BoxView HeightRequest="1" BackgroundColor="LightGray" VerticalOptions="End"/>
-            <busyIndicator:SfBusyIndicator x:Name="busyIndicator" Margin="0,-55,0,0"
-                                       AnimationType="CircularMaterial" 
-                                       IsRunning="{Binding IsLoading, Mode=TwoWay}" 
-                                       TextColor="Blue"  
-                                       WidthRequest="30"
-                                       HeightRequest="30"/>
+
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Spacing="7" Padding="10, 15, 0, 15">
+                <Button x:Name="btnSend"
+                          Clicked="OnSendMsg_Clicked" 
+                          FontSize="Medium" Padding="10,0,10,0" 
+                          TextColor="White" BorderColor="Black" BackgroundColor="{StaticResource Blue100Accent}"   CornerRadius="5" 
+                          FlexLayout.AlignSelf="Stretch"  HorizontalOptions="CenterAndExpand" FontAttributes="Bold" Text="Send"/>
+
+                <Button x:Name="btnCancel" Clicked="OnCancel_Clicked"  FontSize="Medium" Padding="10,0,10,0" 
+                          TextColor="White" BorderColor="Black" BackgroundColor="{StaticResource Blue100Accent}"   CornerRadius="5" 
+                          FlexLayout.AlignSelf="Stretch"  HorizontalOptions="CenterAndExpand" FontAttributes="Bold" Text="Cancel"/>
+            </StackLayout>
+
+            <busyIndicator:SfBusyIndicator x:Name="busyIndicator" Margin="0,30,0,0"
+                                       AnimationType="Cupertino" 
+                                       IsRunning="{Binding IsLoading, Mode=TwoWay}" Title="Sending Message..."
+                                       TextColor="Gray" IndicatorColor="Gray"  TitlePlacement="Bottom"
+                                       HeightRequest="100"/>
 
         </StackLayout>
     </StackLayout>

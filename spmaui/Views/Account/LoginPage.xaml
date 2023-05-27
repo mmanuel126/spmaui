@@ -15,13 +15,13 @@
             <Label x:Name="lblInst" Text="Please Login to your account below!"
                    HorizontalTextAlignment="Center"
                    FontAttributes="Bold" Padding="30,10,30,10"
-                   TextColor="{StaticResource Gray500}" FontSize="17"/>
+                   TextColor="{StaticResource Gray900}" FontSize="17"/>
 
             <StackLayout Padding="30,10,30,10"
                          AbsoluteLayout.LayoutBounds="0,0,1,1"
                          AbsoluteLayout.LayoutFlags="All">
                 <Entry 
-                    Text="" Placeholder="Enter email..." PlaceholderColor="{StaticResource Gray400}"
+                    Text="" Placeholder="Enter email..." PlaceholderColor="{StaticResource Gray500}"
                     x:Name="txtEmail"
                     Keyboard="Email" 
                     WidthRequest="300" />
@@ -29,7 +29,7 @@
 
             <StackLayout Padding="30,3,30,10">
                 <Entry 
-                    Text="" Placeholder="Enter password..." PlaceholderColor="{StaticResource Gray400}" 
+                    Text="" Placeholder="Enter password..." PlaceholderColor="{StaticResource Gray500}" 
                     x:Name="txtPwd"
                     WidthRequest="300" Margin="10,0,10,0"
                     IsPassword="True" />
@@ -58,7 +58,7 @@
             </StackLayout>
 
             <StackLayout Padding="30,10,30,10">
-                <Label x:Name="lblOR" Text="--------- OR ---------" TextColor="Gray" FontSize="15" FontAttributes="None"
+                <Label x:Name="lblOR" Text="--------- OR ---------" TextColor="{StaticResource Gray900}" FontSize="15" FontAttributes="None"
                       HorizontalOptions="CenterAndExpand" Padding="0,0,0,10"
                  />
             </StackLayout>

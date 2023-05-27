@@ -10,7 +10,7 @@
 
             <Label x:Name="lblAppName" Text="Registration Confirmation" 
                       HorizontalTextAlignment="Center" FontAttributes="Bold" Padding="25,5,25,5"
-                      TextColor="{StaticResource Gray600}" FontSize="18"/>
+                      TextColor="{StaticResource Gray900}" FontSize="18"/>
 
             <Label x:Name="lblInstruction" Text=""
                       

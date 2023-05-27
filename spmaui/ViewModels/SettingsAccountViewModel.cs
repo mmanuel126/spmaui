@@ -1,15 +1,28 @@
 ﻿using System;
-using sp_maui.Services;
-using sp_maui.Models;
+using spmaui.Services;
+using spmaui.Models;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace sp_maui.ViewModels
+namespace spmaui.ViewModels
 {
     public class SettingsAccountViewModel: INotifyPropertyChanged
     {
+        bool isRefreshing;
+        public bool IsRefreshing
+        {
+            get => isRefreshing;
+
+            set
+            {
+                isRefreshing = value;
+
+                OnPropertyChanged(nameof(IsRefreshing));
+            }
+        }
+
         List<AccountSettingsInfoModel> _AccountSettingsInfo;
         public List<AccountSettingsInfoModel> AccountSettingsInfo
         {
@@ -66,18 +79,39 @@ namespace sp_maui.ViewModels
             }
         }
 
-        private readonly Members _membersSvc;
+        private readonly ISettings _settingsSvc;
 
-        public SettingsAccountViewModel()
+        public SettingsAccountViewModel(ISettings settingsSvc)
         {
-            _membersSvc = new Members();
-            GetAccountSettngsInfo();
-            GetSecurityQuestions();
-            GetAccountSettingsNotifications();
-            GetDeactivationReasons();
+            try
+            {
+                IsRefreshing = true;
+                _settingsSvc = settingsSvc;
+                GetAccountSettngsInfo();
+                GetSecurityQuestions();
+                GetAccountSettingsNotifications();
+                GetDeactivationReasons();
+                IsRefreshing = false;
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        LogException(ex.Message, ex.StackTrace, "");
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                    }
+                });
+            }
         }
 
-        private async void GetAccountSettngsInfo()
+        public async void GetAccountSettngsInfo()
         {
             string jwtToken = Preferences.Get("AccessToken","");
             string memberID = "0";
@@ -85,11 +119,10 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            AccountSettingsInfo = await s.GetMemberNameInfo(memberID, jwtToken);
+            AccountSettingsInfo = await _settingsSvc.GetMemberNameInfo(memberID, jwtToken);
         }
 
-        private  void GetSecurityQuestions()
+        public  void GetSecurityQuestions()
         {
             List<SecurityQuestions> lst = new List<SecurityQuestions>();
             var question = new SecurityQuestions { Id = 0, Desc = "Select..." }; lst.Add(question);
@@ -99,12 +132,10 @@ namespace sp_maui.ViewModels
             question = new SecurityQuestions { Id = 4, Desc = "What was the name of your first pet?" }; lst.Add(question);
             question = new SecurityQuestions { Id = 5, Desc = "What neighborhood did your grow up on?" }; lst.Add(question);
             question = new SecurityQuestions { Id = 6, Desc = "What is your father's nick name?" }; lst.Add(question);
-
             SecQuestions = lst;
         }
 
-
-        private async void GetAccountSettingsNotifications()
+        public async void GetAccountSettingsNotifications()
         {
             string jwtToken = Preferences.Get("AccessToken", "");
             string memberID = "0";
@@ -112,8 +143,7 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            AccountSettingsNotifications = await s.GetMemberNotifications(memberID, jwtToken);
+            AccountSettingsNotifications = await _settingsSvc.GetMemberNotifications(memberID, jwtToken);
         }
 
         public async Task SaveNotificationSettings(NotificationsSettingModel body)
@@ -124,12 +154,10 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            await s.SaveNotificationSettings(memberID, body, jwtToken);
+            await _settingsSvc.SaveNotificationSettings(memberID, body, jwtToken);
         }
 
-
-        private void GetDeactivationReasons()
+        public void GetDeactivationReasons()
         {
             List<DeactivationReasonsModel> lst = new List<DeactivationReasonsModel>();
             var reason = new DeactivationReasonsModel { Id = 0, Desc = "Other." }; lst.Add(reason);
@@ -142,6 +170,39 @@ namespace sp_maui.ViewModels
             DeactivationReasons = lst;
         }
 
+        public async Task UploadImage(MultipartFormDataContent content)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            {
+                memberID = Preferences.Get("UserID", "");
+            }
+            await _settingsSvc.UploadImage(memberID, content, jwtToken);
+        }
+
+        public async Task SaveMemberNameInfo(string firstName, string middleName, string lastName)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            {
+                memberID = Preferences.Get("UserID", "");
+            }
+            await _settingsSvc.SaveMemberNameInfo(memberID,firstName,middleName,lastName, jwtToken);
+        }
+
+        public async Task SavePasswordInfo(string newPassword)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            {
+                memberID = Preferences.Get("UserID", "");
+            }
+            await _settingsSvc.SavePasswordInfo(memberID, newPassword, jwtToken);
+        }
+
         public async Task SaveSecurityQuestionInfo(string question, string answer)
         {
             string jwtToken = Preferences.Get("AccessToken", "");
@@ -150,8 +211,34 @@ namespace sp_maui.ViewModels
             {
                 memberID = Preferences.Get("UserID", "");
             }
-            Settings s = new Settings();
-            await s.SaveSecurityQuestionInfo(memberID, question, answer, jwtToken);
+            await _settingsSvc.SaveSecurityQuestionInfo(memberID, question, answer, jwtToken);
+        }
+
+        public async Task SaveNotificationsSettings(NotificationsSettingModel mod)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            {
+                memberID = Preferences.Get("UserID", "");
+            }
+            await _settingsSvc.SaveNotificationSettings(memberID, mod, jwtToken);
+        }
+
+        public async Task DeactivateAccount(string reason, string  explanation)
+        {
+            string jwtToken = Preferences.Get("AccessToken", "");
+            string memberID = "0";
+            if (!String.IsNullOrEmpty(Preferences.Get("UserID", "")))
+            {
+                memberID = Preferences.Get("UserID", "");
+            }
+            await _settingsSvc.DeactivateAccount(memberID, reason, explanation, jwtToken);
+        }
+
+        public async void LogException(string msg, string stackTrace, string jwt)
+        {
+            await _settingsSvc.LogException(msg, stackTrace, jwt);
         }
 
         #region INotifyPropertyChanged

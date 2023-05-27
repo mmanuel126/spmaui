@@ -1,12 +1,15 @@
-﻿namespace spmaui.Views.Account;
+﻿using spmaui.ViewModels;
+
+namespace spmaui.Views.Account;
 
 public partial class ConfirmResetPwdPage : ContentPage
 {
-	public ConfirmResetPwdPage()
+    private readonly MemberViewModel _memberViewModel;
+	public ConfirmResetPwdPage(MemberViewModel memberViewModel)
 	{
 		InitializeComponent();
-        this.Title = App.AppSettings.AppName;
-
+        _memberViewModel = memberViewModel;
+        this.BindingContext = memberViewModel;
         //when you touch return to login screen label
         var register_confirm_tap = new TapGestureRecognizer();
         register_confirm_tap.Tapped += register_confirm_tap_Tapped;
@@ -15,7 +18,7 @@ public partial class ConfirmResetPwdPage : ContentPage
 
     private async void register_confirm_tap_Tapped(object sender, EventArgs e)
     {
-        var loginPage = new LoginPage();
-        await Navigation.PushModalAsync(new NavigationPage(loginPage));
+        var loginPage = new LoginPage(_memberViewModel);
+        await Navigation.PushModalAsync(loginPage);
     }
 }

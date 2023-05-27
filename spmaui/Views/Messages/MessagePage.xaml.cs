@@ -1,33 +1,36 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.Services;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class MessagePage : ContentPage
 {
-	public MessagePage()
+    private readonly MessageViewModel _messageViewModel;
+	public MessagePage(MessageViewModel messageViewModel)
 	{
 		InitializeComponent();
-    }
-
-    async void OnCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        collectionView.SelectedItem = null;
-        if (e.CurrentSelection.Count == 0)
-            return;
-        var current = e.CurrentSelection;
-        MessageInfoModel nm = (MessageInfoModel)current[0];
-
-        Preferences.Set("MessageID", nm.messageID);
-        Preferences.Set("SenderID", nm.fromID);
-        await Shell.Current.GoToAsync("messagedetails");
+        _messageViewModel = messageViewModel;
+        this.BindingContext = messageViewModel;
     }
 
     async void OnItemClicked(object sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("messagenew");
+        await Navigation.PushModalAsync(new MessageNewPage(new ConnectionAutocompleteViewModel()));
     }
 
+    async void OnTapGestureRecognizerTapped(object sender, EventArgs e)
+    {
+        var label = sender as Label;
+        var data = label.BindingContext as MessageInfoModel;
+
+        Preferences.Set("ProfileID", data.fromID);
+        Preferences.Set("ProfileName", data.contactName);
+        Preferences.Set("ProfileTitle", data.senderTitle);
+        Preferences.Set("ProfileImage", data.senderImage);
+        Preferences.Set("ProfileLoginUser", "no");
+        await Shell.Current.Navigation.PushModalAsync(new OthersProfilePage(new ProfileViewModel(new Members(), new Commons())));
+    }
 }

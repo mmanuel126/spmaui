@@ -5,12 +5,13 @@ namespace spmaui.Views.Account;
 
 public partial class ChangePasswordPage : ContentPage
 {
-    MemberViewModel vm;
-    public ChangePasswordPage()
+    private readonly MemberViewModel _memberViewModel;
+
+    public ChangePasswordPage(MemberViewModel memberViewModel)
 	{
 		InitializeComponent();
-        this.Title = App.AppSettings.AppName;
-        vm = new MemberViewModel();
+        _memberViewModel = memberViewModel;
+        this.BindingContext = memberViewModel;
 
         lblInstruction1.Text = "Please use the form below to change your password. It is required that you follow the guideline below:";
         lblInstruction2.Text = "Your new password must be between 5 - 12 characters in length.Use a combination of letters and numbers." +
@@ -44,13 +45,10 @@ public partial class ChangePasswordPage : ContentPage
         {
             try
             {
-                // show the loading page...
-                DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-
                 var code = (string)Preferences.Get("ResetPwdCode","");
                 var email = (string)Preferences.Get("ResetPwdEmail","");
 
-                //call service via vm and do things
+                //call service via vm
                 var user = new RegisterModel
                 {
                     code = code,
@@ -58,7 +56,7 @@ public partial class ChangePasswordPage : ContentPage
                     email = email
                 };
 
-                var result = await vm.ChangePassword(user, "");
+                var result = await _memberViewModel.ChangePassword(user);
 
                 if (result == "")
                 {
@@ -66,15 +64,21 @@ public partial class ChangePasswordPage : ContentPage
                 }
                 else
                 {
-                    var confirmResetPwdPage = new ConfirmResetPwdPage();
-                    await Navigation.PushModalAsync(new NavigationPage(confirmResetPwdPage));
+                    var confirmResetPwdPage = new ConfirmResetPwdPage(_memberViewModel);
+                    await Navigation.PushModalAsync(confirmResetPwdPage);
                 }
-                DependencyService.Get<ILoadingPageService>().HideLoadingPage();
             }
             catch (FormatException ex)
             {
-                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
-                DependencyService.Get<ILoadingPageService>().HideLoadingPage();
+                if (ex.GetType() == typeof(HttpRequestException))
+                {
+                    await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                }
+                else
+                {
+                    await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                    _memberViewModel.LogException(ex.Message, ex.StackTrace, "");
+                }
             }
         }
 

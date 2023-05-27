@@ -1,5 +1,5 @@
 ﻿using System;
-namespace sp_maui.Models
+namespace spmaui.Models
 {
     public class AppSettings
     {
@@ -11,5 +11,6 @@ namespace sp_maui.Models
         public string AppNameBackGroundImage { get; set; }
         public string AppImagesURL { get; set; }
         public string WebServiceURL { get; set; }
+        public string AppMemberImagesURL { get; set; }
     }
 }

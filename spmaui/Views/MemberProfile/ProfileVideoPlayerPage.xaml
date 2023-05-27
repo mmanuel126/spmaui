@@ -1,22 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:media="clr-namespace:CommunityToolkit.Maui.Views;assembly=CommunityToolkit.Maui.MediaElement"
-    xmlns:data="clr-namespace:sp_maui.ViewModels"
     mc:Ignorable="d" NavigationPage.HasNavigationBar="True"
-    x:Class="sp_maui.Views.ProfileVideoPlayerPage" Title="Video Player">
+    x:Class="spmaui.Views.ProfileVideoPlayerPage" Title="Video Player">
 
-    <ContentPage.BindingContext>
-        <data:ProfileVideoPlayerViewModel />
-    </ContentPage.BindingContext>
-
-    <Grid HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" BackgroundColor="SeaShell">
-        <StackLayout>
-            <WebView Source="{Binding SelectedVideo}"/>
-        </StackLayout>
-    </Grid>
-
+    <VerticalStackLayout>
+        <Button x:Name="btnReturnToPlaylist"  FontSize="Medium"  WidthRequest="300"
+                Clicked="OnReturnToPlayVideoPage_Clicked"
+                TextColor="White" BorderColor="Black" BackgroundColor="{StaticResource Blue100Accent}"  CornerRadius="20"
+                FlexLayout.AlignSelf="Stretch"  HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" FontAttributes="Bold" Text="Return to Videos"/>
+        <Grid HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" BackgroundColor="WhiteSmoke">
+            <StackLayout>
+                <WebView x:Name="webView" />
+            </StackLayout>
+        </Grid>
+    </VerticalStackLayout>
 </ContentPage>

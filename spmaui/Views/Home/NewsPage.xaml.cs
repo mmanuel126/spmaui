@@ -1,16 +1,19 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class NewsPage : ContentPage
 {
-	public NewsPage()
+    private readonly NewsViewModel _newsViewModel;
+
+	public NewsPage(NewsViewModel newsViewModel)
 	{
 		InitializeComponent();
-       
+        _newsViewModel = newsViewModel;
+        this.BindingContext = _newsViewModel;
     }
 
     async void OnCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -21,13 +24,27 @@ public partial class NewsPage : ContentPage
         RecentNewsModel nm = (RecentNewsModel)current[0];
         await Launcher.OpenAsync(nm.navigateUrl);
         ((CollectionView)sender).SelectedItem = null;
-
-        // string monkeyName = (e.CurrentSelection.FirstOrDefault() as Animal).Name;
-        // This works because route names are unique in this application.
-        //  await Shell.Current.GoToAsync($"monkeydetails?name={monkeyName}");
-        // The full route is shown below.
-        // await Shell.Current.GoToAsync($"//animals/monkeys/monkeydetails?name={monkeyName}");
     }
 
-    
+    async void OnRefreshNews_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await _newsViewModel.DoRefreshNews();
+        }
+        catch (Exception ex)
+        {
+            _newsViewModel.IsRefreshing = false;
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _newsViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
+    }
+
 }

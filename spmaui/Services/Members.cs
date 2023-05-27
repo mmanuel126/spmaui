@@ -1,11 +1,11 @@
 ﻿using System;
 using RestSharp;
 using Newtonsoft.Json;
-using sp_maui.Models;
+using spmaui.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using sp_maui;
+using spmaui;
 using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json.Serialization;
@@ -13,12 +13,9 @@ using System.Text;
 using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Json;
-//using static Android.Provider.MediaStore.Audio;
 using System.Web;
-//using Org.Apache.Http.Client;
-//using Java.Net;
 
-namespace sp_maui.Services
+namespace spmaui.Services
 {
     public class Members: IMembers
     {
@@ -76,15 +73,6 @@ namespace sp_maui.Services
             var response = await _restClient.GetAsync(request);
             var dynJson = await response.Content.ReadFromJsonAsync<List<RecentPostsModel>>();
 
-
-           // var request = new RestRequest("getRecentPosts/" + memberID.ToString(), Method.Get);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-           // request.AddHeader("authorization", "Bearer " + jwtToken);
-
-           // RestResponse response =  await _restClient.ExecuteAsync(request);
-           // var content = response.Content;
-           // List<RecentPostsModel> dynJson = JsonConvert.DeserializeObject<List<RecentPostsModel>>(content);
-       
             for (int i = 0; i < dynJson.Count; i++)
             {
                 RecentPostsModel mp = new RecentPostsModel();
@@ -98,7 +86,7 @@ namespace sp_maui.Services
                     {
                         var child = new RecentPostsModel();
                         child.memberName = ls.memberName;
-                        child.postID = ls.postResponseID;
+                        child.postID = ls.postResponseID.ToString();
                         child.description = ls.description;
                         child.picturePath = ls.picturePath;
                         child.datePosted = ls.dateResponded;
@@ -120,25 +108,34 @@ namespace sp_maui.Services
         /// <param name="postID">Post identifier.</param>
         public async Task<List<RecentPostChildModel>> GetChildPosts(int postID, string jwtToken)
         {
-            List<RecentPostChildModel> lst = new List<RecentPostChildModel>();
-            var request = "getRecentPostResponses / " + postID.ToString();
+            try
+            {
 
-            _restClient.DefaultRequestHeaders.Authorization
+                httpClient.DefaultRequestHeaders.Authorization
                          = new AuthenticationHeaderValue("Bearer", jwtToken);
+                var rsp = await httpClient.GetAsync("getRecentPostResponses/" + postID.ToString());
+                var dynJson = await rsp.Content.ReadFromJsonAsync<List<RecentPostChildModel>>();
+                //dynJson.memberProfileTitle = dynJson.CurrentStatus;
+                //dynJson.memProfileName = dynJson.FirstName + " " + dynJson.MiddleName + " " + dynJson.LastName;
 
-            var response = await _restClient.GetAsync(request);
-            var dynJson = await response.Content.ReadFromJsonAsync<List<RecentPostChildModel>>();
+                /*
 
+                List<RecentPostChildModel> lst = new List<RecentPostChildModel>();
+                var request = "getRecentPostResponses/" + postID.ToString();
 
-            //List<RecentPostChildModel> lst = new List<RecentPostChildModel>();
-            //var request = new RestRequest("getRecentPostResponses/" + postID.ToString(), Method.Get);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
+                _restClient.DefaultRequestHeaders.Authorization
+                             = new AuthenticationHeaderValue("Bearer", jwtToken);
+                var response = await _restClient.GetAsync(request);
+                var dynJson = await response.Content.ReadFromJsonAsync<List<RecentPostChildModel>>();
+                */
 
-            //RestResponse response =  await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //List<RecentPostChildModel> dynJson = JsonConvert.DeserializeObject<List<RecentPostChildModel>>(content);
-            return dynJson;
+                return dynJson;
+            }
+            catch (Exception ex)
+            {
+                string e = ex.Message;
+                return null;
+            }
         }
 
         /// <summary>
@@ -151,33 +148,14 @@ namespace sp_maui.Services
         /// <param name="screen">Screen.</param>
         public async Task<UserModel> AuthenticateLGUser(string username, string pwd, string rememberMe, string screen)
         {
-            
-
             var body = new LoginModel
             {
                 email = username,
                 password = pwd
             };
- 
             var response = await _restActClient.PostAsJsonAsync("login", body);
             var dynJson = await response.Content.ReadFromJsonAsync<UserModel>();
             return dynJson;
-
-
-            //var request = new RestRequest("login", Method.Post);
-            ////request.AddHeader("Content-Type", "application/json");
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(new LoginModel
-            //{
-            //    email = username,
-            //    password = pwd
-            //});
-
-            //RestResponse response = await _restActClient.ExecuteAsync(request);
-            //var content = response.Content;
-
-            //UserModel dynJson = JsonConvert.DeserializeObject<UserModel>(content);
-            //return dynJson;
         }
 
         public async Task<UserModel> RefreshToken(string jwtToken)
@@ -186,13 +164,6 @@ namespace sp_maui.Services
             var response = await _restClient.PostAsync("refreshLogin?accessToken=" + jwtToken, requestContent);
             var dynJson = await response.Content.ReadFromJsonAsync<UserModel>();
             return dynJson;
-
-            //var request = new RestRequest("refreshLogin?accessToken=" + jwtToken, Method.Post);
-            //RestResponse response = await _restActClient.ExecuteAsync(request);
-            //var content = response.Content;
-
-            //UserModel dynJson = JsonConvert.DeserializeObject<UserModel>(content);
-            //return dynJson;
         }
 
         /// <summary>
@@ -202,23 +173,13 @@ namespace sp_maui.Services
         /// <param name="register">Register.</param>
         public async Task<string> RegisterUser(RegisterModel register)
         {
-            //var response = await _restClient.PostAsJsonAsync("register", register);
-            // var result = await response.Content.ReadAsStringAsync();
-            // return result;
-
             RestClient _restClient = new RestClient(ACCOUNT_SERVICE_URI);
-
-
-
             var request = new RestRequest("register", Method.Post);
-            //request.AddHeader("Content-Type", "application/json");
             request.RequestFormat = DataFormat.Json;
             request.AddJsonBody(register); register.confirmPwd = "";register.code = "";
             RestResponse response = await _restClient.ExecuteAsync(request);
             var content = response.Content;
-
             var result = JsonConvert.DeserializeObject<string>(content).ToString();
-            // return dynJson.ToString();
             return result;
         }
 
@@ -230,19 +191,11 @@ namespace sp_maui.Services
         {
             _restClient.DefaultRequestHeaders.Authorization
                          = new AuthenticationHeaderValue("Bearer", jwtToken);
-
             var response = await _restClient.GetAsync("getRecentNews");
             var dynJson = await response.Content.ReadFromJsonAsync<List<RecentNewsModel>>();
             return dynJson;
-
-            //var request = new RestRequest("getRecentNews", Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res = await _restClient.ExecuteAsync<List<RecentNewsModel>>(request);
-            //return res.Data;
         }
 
-        
         public async Task<List<YoutubePlayListModel>> GetMemberPlaylists(string memberID, string jwtToken)
         {
             try
@@ -253,24 +206,11 @@ namespace sp_maui.Services
                 var response = await _restClient.GetAsync("GetVideoPlayList/" + memberID);
                 var dynJson = await response.Content.ReadFromJsonAsync<List<YoutubePlayListModel>>();
                 return dynJson;
-
-                //var request = new RestRequest("GetVideoPlayList/" + memberID, Method.Get);
-                ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-                //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-                //var response = await _restClient.ExecuteAsync(request);
-                //var content = response.Content;
-                //var dynJson = JsonConvert.DeserializeObject<List<YoutubePlayListModel>>(content);
-                //return dynJson;
             }
             catch (Exception e)
             {
                 string x = e.Message; return null;
             }
-            //var res = await _restClient.ExecuteAsync<List<YoutubePlayListModel>>(request);
-
-
-            //return res.Data;
         }
 
 
@@ -283,14 +223,6 @@ namespace sp_maui.Services
 
                 var response = await _restClient.GetAsync("GetVideosList/" + playListID);
                 var dynJson = await response.Content.ReadFromJsonAsync<List<YoutubeVideosListModel>>();
-
-                //var request = new RestRequest("GetVideosList/" + playListID, Method.Get);
-                //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-                //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-                //var response = await _restClient.ExecuteAsync(request);
-                //var content = response.Content;
-                //var dynJson = JsonConvert.DeserializeObject<List<YoutubeVideosListModel>>(content);
                 return dynJson;
             }
             catch (Exception e)
@@ -298,7 +230,6 @@ namespace sp_maui.Services
                 string x = e.Message; return null;
             }
         }
-
 
         /// <summary>
         /// Gets the member basic info.
@@ -311,43 +242,21 @@ namespace sp_maui.Services
             {
                 httpClient.DefaultRequestHeaders.Authorization
                             = new AuthenticationHeaderValue("Bearer", jwtToken);
-
                 var rsp = await httpClient.GetAsync("GetMemberGeneralInfoV2/" + memberID.ToString());
                 var dynJson = await rsp.Content.ReadFromJsonAsync<MemberProfileBasicInfoModel>();
-                //return dynJson;
-
-                /*
-                _restClient.DefaultRequestHeaders.Authorization
-                           = new AuthenticationHeaderValue("Bearer", jwtToken);
-
-                var response = await _restClient.GetAsync("GetMemberGeneralInfoV2/" + memberID.ToString());
-                MemberProfileBasicInfoModel dynJson = await response.Content.ReadFromJsonAsync<MemberProfileBasicInfoModel>();
-                */
-
-                //MemberProfileBasicInfoModel lst = new MemberProfileBasicInfoModel();
-                //var request = new RestRequest("GetMemberGeneralInfoV2/" + memberID.ToString(), Method.Get);
-                ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-                //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-                //RestResponse response =  await _restClient.ExecuteAsync(request);
-                //var content = response.Content;
-                //MemberProfileBasicInfoModel dynJson = JsonConvert.DeserializeObject<MemberProfileBasicInfoModel>(content);
-
                 dynJson.memberProfileTitle = dynJson.CurrentStatus;
                 dynJson.memProfileName = dynJson.FirstName + " " + dynJson.MiddleName + " " + dynJson.LastName;
 
-
                 if (String.IsNullOrEmpty(dynJson.memProfileImage))
                 {
-                    dynJson.memProfileImage = App.AppSettings.AppImagesURL + "images/members/default.png";
+                    dynJson.memProfileImage = App.AppSettings.AppMemberImagesURL + "default.png";
                 }
                 else
                 {
-                    dynJson.memProfileImage = App.AppSettings.AppImagesURL + "/" + dynJson.memProfileImage;
+                    dynJson.memProfileImage = App.AppSettings.AppMemberImagesURL + dynJson.memProfileImage;
                 }
 
                 dynJson.memProfileDOB = dynJson.DOBMonth + "/" + dynJson.DOBDay + "/" + dynJson.DOBYear;
-
 
                 string str = "";
                 if (dynJson.LookingForEmployment)
@@ -381,24 +290,9 @@ namespace sp_maui.Services
                 else if (dynJson.InterestedInType == "103")
                     dynJson.InterestedDesc = "Sportscaster";
 
-
-                //get youtube channel id
-                //MemberProfileBasicInfoModel lst = new MemberProfileBasicInfoModel();
-                //var request2 = new RestRequest("GetYoutubeChannel/" + memberID.ToString(), Method.Get);
-                //request2.AddHeader("Content-Type", "application/json; charset=utf-8");
-                //request2.AddHeader("authorization", "Bearer " + jwtToken);
-                
-                
                 var response2 = await _restClient.GetAsync("GetYoutubeChannel/" + memberID.ToString());
                 var result2 = await response2.Content.ReadAsStringAsync();
               
-
-
-                //RestResponse response2 = await _restClient.ExecuteAsync(request2);
-                //var content2 = response2.Content;
-
-                //var result2 = JsonConvert.DeserializeObject<string>(content2).ToString();
-
                 var channelID = "";
 
                 if (result2 != null)
@@ -424,11 +318,6 @@ namespace sp_maui.Services
             var response = await _restClient.GetAsync("GetRegisteredMembers?status=" + status);
             var dynJson = await response.Content.ReadFromJsonAsync<List<RegisteredMembersModel>>();
             return dynJson;
-
-            //var request = new RestRequest("GetRegisteredMembers", Method.Get);
-            //request.AddParameter("status", status);
-            //var res = await _restClient.ExecuteAsync<List<RegisteredMembersModel>>(request);
-            //return res.Data;
         }
 
         /// <summary>
@@ -447,20 +336,6 @@ namespace sp_maui.Services
             var response = await _restClient.PostAsync(resource, requestContent);
             var result = await response.Content.ReadAsStringAsync();
             return result;
-
-            //string resource = "SavePosts/" + memberID + "/" + postID + "?postMsg=" + postMsg;
-            //var request = new RestRequest(resource, Method.Post);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(new PostModel
-            //{
-            //    memberID = memberID.ToString(),
-            //    postID = postID.ToString(),
-            //    postMsg = postMsg,
-            //});
-            //RestResponse response =  await _restClient.ExecuteAsync(request);
-            //return response.Content;
         }
 
         /// <summary>
@@ -485,21 +360,6 @@ namespace sp_maui.Services
                 var msg = ex.Message;
                 return null;
             }
-
-            //var requestContent = new StringContent("Encoding.UTF8, application/json");
-            //var response = await _restClient.PostAsync(resource, requestContent);
-
-            //// List<MemberProfileContactInfoModel> dat = new List<MemberProfileContactInfoModel>();
-
-            //var request = new RestRequest("GetMemberContactInfo/" + memberID.ToString(), Method.Get);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-
-            //RestResponse response = await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //var data = JsonConvert.DeserializeObject<MemberProfileContactInfoModel>(content);
-            //return data;
         }
 
         /// <summary>
@@ -516,16 +376,6 @@ namespace sp_maui.Services
             var response = await _restClient.GetAsync(resource);
             var dynJson = await response.Content.ReadFromJsonAsync<List<MemberProfileEmploymentModel>>();
             return dynJson;
-
-            //List<MemberProfileEmploymentModel> dat = new List<MemberProfileEmploymentModel>();
-            //var request = new RestRequest("GetMemberEmploymentInfo/" + memberID.ToString(), Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-            //RestResponse response =  await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //var res = await _restClient.ExecuteAsync<List<MemberProfileEmploymentModel>>(request);
-            //return res.Data;
         }
 
         /// <summary>
@@ -535,8 +385,6 @@ namespace sp_maui.Services
         /// <param name="memberID">Member identifier.</param>
         public async Task<List<MemberProfileEducationModel>> GetMemberEducationInfo(int memberID, string jwtToken)
         {
-            //List<MemberProfileEducationModel> dat = new List<MemberProfileEducationModel>();
-
             _restClient.DefaultRequestHeaders.Authorization
                          = new AuthenticationHeaderValue("Bearer", jwtToken);
 
@@ -544,49 +392,40 @@ namespace sp_maui.Services
             var response = await _restClient.GetAsync(resource);
             var res = await response.Content.ReadFromJsonAsync<List<MemberProfileEducationModel>>();
             
-
-            //var request = new RestRequest("GetMemberEducationInfo/" + memberID.ToString(), Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res = await _restClient.ExecuteAsync<List<MemberProfileEducationModel>>(request);
-
-            //dat = (List<MemberProfileEducationModel>)res.Data;
-
             for (var i = 0; i < res.Count-1; i++)
             {
-               // MemberProfileEducationModel d = new MemberProfileEducationModel();
-                //d = res.Data[i];
-                //    //  foreach (var d in dat)
-                //    //{
-                //    if (d.schoolImage == null)
-                //    {
-                //        d.schoolWebSite = "";
-                //    }
+                if (res[i].schoolName != null)
+                {
+                    if (res[i].schoolName.Length > 40)
+                    {
+                        res[i].schoolName = res[i].schoolName.Substring(0, 40) + "...";
+                    }
+                }
 
-                //    if (d.schoolWebSite.IndexOf("http") == -1)
-                //    {
-                //        d.schoolWebSite = "http://" + d.schoolWebSite;
-                //    }
-
-               
-
+                if (res[i].schoolName != null)
+                {
+                    if (res[i].schoolAddress.Length > 48)
+                    {
+                        res[i].schoolAddress = res[i].schoolAddress.Substring(0, 48) + "...";
+                    }
+                }
 
                 if (res[i].schoolImage != null)
                 {
                     if (res[i].schoolImage != "")
                     {
-                        res[i].schoolWebSite = res[i].schoolImage;
+                        res[i].webSite = res[i].schoolImage;
 
-                        if (res[i].schoolWebSite.IndexOf("http") == -1)
+                        if (res[i].webSite.IndexOf("http") == -1)
                         {
-                            res[i].schoolWebSite = "http://" + res[i].schoolWebSite;
+                            res[i].webSite = "http://" + res[i].webSite;
                         }
 
                         res[i].schoolImage = "https://www.google.com/s2/favicons?domain=" + res[i].schoolImage.ToString();
                     }
                     else
                     {
-                       res[i].schoolImage = App.AppSettings.AppImagesURL + "images/members/default.png";
+                       res[i].schoolImage = App.AppSettings.AppMemberImagesURL + "default.png";
                     }
                 }
 
@@ -599,11 +438,8 @@ namespace sp_maui.Services
                 {
                     res[i].major = res[i].major + " - " + res[i].yearClass;
                 }
-
-               // dat.Add(d);
             }
             return res;
-
         }
 
         /// <summary>
@@ -616,16 +452,10 @@ namespace sp_maui.Services
             _restClient.DefaultRequestHeaders.Authorization
                         = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-            string resource = "GetMemberPersonalInfo / " + memberID.ToString();
+            string resource = "GetMemberPersonalInfo/" + memberID.ToString();
             var response = await _restClient.GetAsync(resource);
             var res = await response.Content.ReadFromJsonAsync<List<MemberProfileAboutModel>>();
             return res;
-            //List<MemberProfileAboutModel> dat = new List<MemberProfileAboutModel>();
-            //var request = new RestRequest("GetMemberPersonalInfo/" + memberID.ToString(), Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res = await _restClient.ExecuteAsync<List<MemberProfileAboutModel>>(request);
-            //return res.Data;
         }
 
         /// <summary>
@@ -644,37 +474,7 @@ namespace sp_maui.Services
             var response = await _restConnectionClient.GetAsync(resource);
             var res = await response.Content.ReadFromJsonAsync<List<ContactsModel>>();
             return res;
-
-
-
-            //List<ContactsModel> dat = new List<ContactsModel>();
-
-
-           
-            //var request = new RestRequest("GetMemberConnections", Method.Get);
-            //request.AddParameter("memberID", memberID);
-            //request.AddParameter("show", show);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res =   await _restConnectionClient.ExecuteAsync<List<ContactsModel>>(request);
-            //return res.Data;
         }
-
-        /// <summary>
-        /// Gets the member events info.
-        /// </summary>
-        /// <returns>The member events info.</returns>
-        /// <param name="memberID">Member identifier.</param>
-        //public async Task<List<EventsModel>> GetMemberEventsInfo(int memberID, string jwtToken)
-        //{
-        //    List<EventsModel> dat = new List<EventsModel>();
-
-        //    var request = new RestRequest("GetMemberEvents/" + memberID.ToString(), Method.GET);
-        //    request.AddHeader("Content-Type", "application/json; charset=utf-8");
-        //    request.AddHeader("authorization", "Bearer " + jwtToken);
-        //    var res = await _restEventClient.ExecuteAsync<List<EventsModel>>(request);
-        //    return res.Data;
-        //}
 
         /// <summary>
         /// Updates the profile picture.
@@ -688,16 +488,15 @@ namespace sp_maui.Services
             var response2 = await _restClient.PutAsync ("UploadProfilePhoto?memberID=" + memberID.ToString() + "&fileName=" + fileName, requestContent);
             var result = await response2.Content.ReadAsStringAsync();
             return result;
-
-            //var request = new RestRequest("UploadProfilePhoto", Method.Put);
-            //request.AddParameter("memberID", memberID);
-            //request.AddParameter("fileName", fileName);
-
-            //RestResponse response =  await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //return content.ToString();
         }
 
+        /// <summary>
+        /// returns true or false if contact is a friend of member.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="contactID"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task<string> IsFriendByContactID(string memberID, string contactID, string jwtToken)
         {
             _restClient.DefaultRequestHeaders.Authorization
@@ -707,18 +506,15 @@ namespace sp_maui.Services
             var response2 = await _restClient.GetAsync("IsFriendByContactID/" + memberID.ToString() + "/" + contactID.ToString());
             var result = await response2.Content.ReadAsStringAsync();
             return result;
-
-
-
-            //var request = new RestRequest("IsFriendByContactID/" + memberID.ToString() + "/" + contactID.ToString(), Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-            //var response =   await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //return content.ToString();
         }
 
+        /// <summary>
+        /// determines if contact request is sent.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="contactID"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task <string> IsContactRequestSent(string memberID, string contactID, string jwtToken)
         {
             _restClient.DefaultRequestHeaders.Authorization
@@ -728,17 +524,15 @@ namespace sp_maui.Services
             var response2 = await _restClient.GetAsync("IsContactRequestSent" + memberID.ToString() + "/" + contactID.ToString());
             var result = await response2.Content.ReadAsStringAsync();
             return result;
-
-
-            //var request = new RestRequest("IsContactRequestSent" + memberID.ToString() + "/" + contactID.ToString(), Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-
-            //var response =   await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //return content.ToString();
         }
 
+        /// <summary>
+        /// saves member general information.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="basicInfo"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task SaveMemberGeneralInfo(string memberID, MemberProfileBasicInfoModel basicInfo, string jwtToken)
         {
             if (basicInfo.InterestedDesc == "Athletes and Sports")
@@ -757,14 +551,6 @@ namespace sp_maui.Services
                 basicInfo.InterestedInType = "102";
             else if (basicInfo.InterestedDesc == "Sportscaster")
                 basicInfo.InterestedInType = "103";
-
-            //var request = new RestRequest("SaveMemberGeneralInfo/" + memberID.ToString(), Method.Post);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //request.RequestFormat = DataFormat.Json;
 
             SaveMemberProfileGenInfoModel body = new SaveMemberProfileGenInfoModel();
             body.FirstName = basicInfo.FirstName;
@@ -809,22 +595,24 @@ namespace sp_maui.Services
             else
                 body.LookingForRecruitment = false;   
 
-           // request.AddJsonBody(body);
-
             _restClient.DefaultRequestHeaders.Authorization
                       = new AuthenticationHeaderValue("Bearer", jwtToken);
             await _restClient.PostAsJsonAsync("SaveMemberGeneralInfo/" + memberID.ToString(), body);
-
-           //await _restClient.ExecuteAsync(request);
-           
         }
 
+        /// <summary>
+        /// saves member contact information.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="contactInfo"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task SaveMemberContactInfo(string memberID, MemberProfileContactInfoModel contactInfo, string jwtToken)
         {
             _restClient.DefaultRequestHeaders.Authorization
                      = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-            var builder = new UriBuilder("SaveMemberContactInfoV2 / " + memberID.ToString());
+            var builder = new UriBuilder(MEMBERS_SERVICE_URI + "SaveMemberContactInfoV2/" + memberID.ToString());
             var query = HttpUtility.ParseQueryString(builder.Query);
           
             query["Address"]=contactInfo.Address;
@@ -836,90 +624,27 @@ namespace sp_maui.Services
             query["HomePhone"]=  contactInfo.HomePhone;
             query["Instagram"]= contactInfo.Instagram;
             query["Neighborhood"] = contactInfo.Neighborhood;
-          /*  query["ShowAddress"] = contactInfo.ShowAddress;
-            query["ShowCellPhone"]= contactInfo.ShowCellPhone;
-            query["ShowEmailToMembers"]= contactInfo.ShowEmailToMembers;
-            query["SbowHomePhone"]= contactInfo.ShowHomePhone;*/
             query["State"]= contactInfo.State;
             query["Twitter"]= contactInfo.Twitter;
             query["Website"]= contactInfo.Website;
             query["Zip"]= contactInfo.Zip;
-
             builder.Query = query.ToString();
             string url = builder.ToString();
             var content = new StringContent("Encoding.UTF8, application/json");
             await _restClient.PostAsync(url,content);
 
-
-            //var request = new RestRequest("SaveMemberContactInfoV2/" + memberID.ToString(), Method.Post);
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //query["Address", contactInfo.Address);
-            //query["CellPhone", contactInfo.CellPhone);
-            //query["City", contactInfo.City);
-            //query["Email", contactInfo.Email);
-            //query["OtherEmail", contactInfo.OtherEmail);
-            //query["Facebook", contactInfo.Facebook);
-            //query["HomePhone", contactInfo.HomePhone);
-            //query["Instagram", contactInfo.Instagram);
-            //query["Neighborhood", contactInfo.Neighborhood);
-            //query["ShowAddress", contactInfo.ShowAddress);
-            //query["ShowCellPhone", contactInfo.ShowCellPhone);
-            //query["ShowEmailToMembers", contactInfo.ShowEmailToMembers);
-            //query["SbowHomePhone", contactInfo.ShowHomePhone);
-            //query["State", contactInfo.State);
-            //query["Twitter", contactInfo.Twitter);
-            //query["Website", contactInfo.Website);
-            //query["Zip", contactInfo.Zip);
-
-            //RestResponse response = await _restClient.ExecuteAsync (request);
-            //var content = response.Content;
-
-            /*
-
-
-            var request = new RestRequest("SaveMemberContactInfo/" + memberID.ToString(), Method.Post);
-
-            request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            request.AddHeader("authorization", "Bearer " + jwtToken);
-            //request.RequestFormat = DataFormat.Json;
-
-            var body = new SaveMemberProfileContactInfoModel
-            {
-                address = contactInfo.Address,
-                cellPhone = contactInfo.CellPhone,
-                city = contactInfo.City,
-                email  = contactInfo.Email,
-                otherEmail = contactInfo.OtherEmail,
-                facebook = contactInfo.Facebook,
-                homePhone = contactInfo.HomePhone,
-                instagram = contactInfo.Instagram,
-                neighborhood = contactInfo.Neighborhood,
-                showAddress = contactInfo.ShowAddress,
-                showCellPhone = contactInfo.ShowCellPhone,
-                showEmailToMembers = contactInfo.ShowEmailToMembers,
-                showHomePhone = contactInfo.ShowHomePhone,
-                state = contactInfo.State,
-                twitter = contactInfo.Twitter,
-                website = contactInfo.Website,
-                zip = contactInfo.Zip
-
-            };
-            var b = JsonConvert.SerializeObject(body);
-
-            request.AddJsonBody(body);
-            RestResponse response = await _restClient.ExecuteAsync(request);
-            */
-            /*
-            request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            request.RequestFormat = DataFormat.Json;
-           // request.AddJsonBody(contactInfo);
-
-            var json = request.JsonSerializer.Serialize(contactInfo);
-            request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res = await _restClient.ExecuteAsync(request); */
         }
 
+        /// <summary>
+        /// Saves member biography data.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="aboutMe"></param>
+        /// <param name="activities"></param>
+        /// <param name="hobbies"></param>
+        /// <param name="specialSkills"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task SaveMemberAboutData(string memberID, string aboutMe, string activities, string hobbies, string specialSkills, string jwtToken)
         {
             _restClient.DefaultRequestHeaders.Authorization
@@ -928,71 +653,52 @@ namespace sp_maui.Services
             var request = "SaveMemberPersonalInfo?memberID=" + memberID.ToString() + "&activities=" + activities + " &interests=" + hobbies + " &specialSkills=" + specialSkills + " &aboutMe=" + aboutMe;
             var content = new StringContent("Encoding.UTF8, application/json");
             await _restClient.PostAsync(request, content);
-
-            //var request = new RestRequest("SaveMemberPersonalInfo?memberID=" + memberID.ToString() + "&activities=" + activities + " &interests=" + hobbies + " &specialSkills=" + specialSkills + " &aboutMe=" + aboutMe, Method.Post);
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //RestResponse response =  await _restClient.ExecuteAsync(request);
         }
 
-        public async Task<string> ResetPassword(string email, string jwt)
+        /// <summary>
+        /// reset password.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<string> ResetPassword(string email)
         {
-           // _restClient.DefaultRequestHeaders.Authorization
-           //        = new AuthenticationHeaderValue("Bearer", jwt);
-
-            var request = new RestRequest("ResetPassword?email = " + email,Method.Get) ;
-            //var response = await _restClient.GetAsync(request);
-            //var result = await response.Content.ReadAsStringAsync();
-            //return result;
-
-            request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            request.AddHeader("authorization", "Bearer " + jwt);
-
-            RestResponse response = await _rstClient.ExecuteAsync(request);
-            var content = response.Content;
-            return content.ToString();
-        }
-
-        public async Task<string> IsResetCodeExpired(string code, string jwt)
-        {
-            _restClient.DefaultRequestHeaders.Authorization
-                      = new AuthenticationHeaderValue("Bearer", jwt);
-
-            var requestContent = new StringContent("Encoding.UTF8, application/json");
-            var response2 = await _restClient.GetAsync("IsResetCodeExpired?code=" + code);
-            var result = await response2.Content.ReadAsStringAsync();
+            var response = await _restClient.GetAsync("ResetPassword?email=" + email);
+            var result = await response.Content.ReadAsStringAsync();
             return result;
-
-
-
-            //var request = new RestRequest("IsResetCodeExpired?code=" + code, Method.Get);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwt);
-
-            //RestResponse response = await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //return content.ToString();
         }
 
-        public async Task<string> ChangePassword(RegisterModel model, string jwt)
+        /// <summary>
+        /// checks if reset code expired.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public async Task<string> IsResetCodeExpired(string code)
         {
-            _restClient.DefaultRequestHeaders.Authorization
-                         = new AuthenticationHeaderValue("Bearer", jwt);
-            var request = "ChangePassword?pwd=" + model.confirmPwd + "&email=" + model.email + "&code=" + model.code;
+            var response = await _restClient.GetAsync("IsResetCodeExpired?code=" + code);
+            var result = await response.Content.ReadAsStringAsync();
+            return result;
+        }
 
+        /// <summary>
+        /// changes password.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<string> ChangePassword(RegisterModel model)
+        {
+            var request = "ChangePassword?pwd=" + model.confirmPwd + "&email=" + model.email + "&code=" + model.code;
             var response = await _restClient.GetAsync(request);
             var dynJson = await response.Content.ReadAsStringAsync();
             return dynJson;
-
-            //var request = new RestRequest("ChangePassword?pwd=" + model.confirmPwd + "&email=" + model.email + "&code=" + model.code,
-            //    Method.Get);
-            //request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwt);
-
-            //RestResponse response = await _restClient.ExecuteAsync(request);
-            //var content = response.Content;
-            //return content.ToString();
         }
 
+        /// <summary>
+        /// set member status.
+        /// </summary>
+        /// <param name="MemberId"></param>
+        /// <param name="status"></param>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task<string> SetMemberStatus(string MemberId, string status,string jwtToken)
         {
             _restClient.DefaultRequestHeaders.Authorization
@@ -1002,15 +708,13 @@ namespace sp_maui.Services
             var response = await _restClient.PostAsync(request, requestContent);
             var dynJson = await response.Content.ReadAsStringAsync();
             return dynJson;
-
-            //var request = new RestRequest("SetMemberStatus?memberId=" + MemberId.ToString() + "&status=" + status , Method.Post);
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //RestResponse response = await _restClient.ExecuteAsync(request);
-
-            //var content = response.Content;
-            //return content.ToString();
         }
 
+        /// <summary>
+        /// get sport list.
+        /// </summary>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
         public async Task<List<Item>>  GetSportsList(string jwtToken)
         {
             _restConnectionClient.DefaultRequestHeaders.Authorization
@@ -1019,57 +723,61 @@ namespace sp_maui.Services
             var response = await _restConnectionClient.GetAsync("GetSportsList");
             var dynJson = await response.Content.ReadFromJsonAsync<List<Item>>();
             return dynJson;
-
-
-            //var request = new RestRequest("GetSportsList", Method.Get);
-
-            ////request.AddParameter("memberID", memberID);
-            ////request.AddParameter("show", show);
-            ////request.AddHeader("Content-Type", "application/json; charset=utf-8");
-            //request.AddHeader("authorization", "Bearer " + jwtToken);
-            //var res = await _restConnectionClient.ExecuteAsync<List<Item>>(request);
-            //return res.Data;
         }
 
+        /// <summary>
+        /// add new school.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="body"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task AddNewSchool(string memberId, MemberProfileEducationModel body, string jwt)
         {
             _restClient.DefaultRequestHeaders.Authorization
                         = new AuthenticationHeaderValue("Bearer", jwt);
             await _restClient.PostAsJsonAsync("AddMemberSchool/" + memberId.ToString(), body);
-
-            //var request = new RestRequest("AddMemberSchool/" + memberId, Method.Post);
-            //request.AddHeader("authorization", "Bearer " + jwt);
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(body);
-            //RestResponse response = await _restClient.ExecuteAsync(request);
         }
 
+        /// <summary>
+        /// update school.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="body"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task UpdateSchool( string memberId, MemberProfileEducationModel body, string jwt)
         {
-            _restClient.DefaultRequestHeaders.Authorization
-                        = new AuthenticationHeaderValue("Bearer", jwt);
-            await _restClient.PostAsJsonAsync("UpdateMemberSchool/" + memberId.ToString(), body);
-
-            //var request = new RestRequest("UpdateMemberSchool/"+ memberId, Method.Put);
-            //request.AddHeader("authorization", "Bearer " + jwt);
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(body);
-            //RestResponse response = await _restClient.ExecuteAsync(request);
+         
+            var request = new RestRequest("UpdateMemberSchool/"+ memberId, Method.Put);
+            request.AddHeader("authorization", "Bearer " + jwt);
+            request.RequestFormat = DataFormat.Json;
+            request.AddJsonBody(body);
+            RestResponse response = await _rstClient.ExecuteAsync(request);
         }
 
+        /// <summary>
+        /// remove school.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="schoolId"></param>
+        /// <param name="instType"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task RemoveSchool(string memberId, string schoolId, string  instType, string jwt)
         {
             _restClient.DefaultRequestHeaders.Authorization
                        = new AuthenticationHeaderValue("Bearer", jwt);
             await _restClient.DeleteAsync("RemoveMemberSchool?memberID=" + memberId + "&instID=" + schoolId + "&instType=" + instType);
-
-
-            //var request = new RestRequest("RemoveMemberSchool?memberID=" + memberId + "&instID=" + schoolId + "&instType=" + instType, Method.Delete);
-            //request.AddHeader("authorization", "Bearer " + jwt);
-            //request.RequestFormat = DataFormat.Json;
-            //RestResponse response = await _restClient.ExecuteAsync(request);
         }
 
+        /// <summary>
+        /// save youtube channel ID.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="channelID"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task SaveChannelID(string memberID, string channelID, string jwt)
         {
             var body = new YoutubeDataModel
@@ -1080,16 +788,16 @@ namespace sp_maui.Services
 
             _restClient.DefaultRequestHeaders.Authorization
                         = new AuthenticationHeaderValue("Bearer", jwt);
-            await _restClient.PutAsJsonAsync("SetYoutubeChannel/" + memberID.ToString(), body);
-
-            //var request = new RestRequest("SetYoutubeChannel", Method.Put);
-            //request.AddHeader("authorization", "Bearer " + jwt);
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(body);
-            //RestResponse response = await _restClient.ExecuteAsync(request);
-
+            await _restClient.PutAsJsonAsync("SetYoutubeChannel", body);
         }
 
+        /// <summary>
+        /// save instagram URL.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="instagramURL"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task SaveInstagramURL(string memberID, string instagramURL, string jwt)
         {
             var body = new InstagramDataModel
@@ -1097,20 +805,18 @@ namespace sp_maui.Services
                 memberID = memberID,
                 instagramURL = instagramURL
             };
-
-
             _restClient.DefaultRequestHeaders.Authorization
                         = new AuthenticationHeaderValue("Bearer", jwt);
-            await _restClient.PutAsJsonAsync("SetInstagramURL/" + memberID.ToString(), body);
-
-
-            //var request = new RestRequest("SetInstagramURL", Method.Put);
-            //request.AddHeader("authorization", "Bearer " + jwt);
-            //request.RequestFormat = DataFormat.Json;
-            //request.AddJsonBody(body);
-            //RestResponse response = await _restClient.ExecuteAsync(request);
+            await _restClient.PutAsJsonAsync("SetInstagramURL", body);
         }
 
+        /// <summary>
+        /// upload image.
+        /// </summary>
+        /// <param name="memberID"></param>
+        /// <param name="content"></param>
+        /// <param name="jwt"></param>
+        /// <returns></returns>
         public async Task UploadImage(string memberID, MultipartFormDataContent content, string jwt)
         {
             var httpClient = new HttpClient();
@@ -1119,6 +825,15 @@ namespace sp_maui.Services
             var response = await httpClient.PostAsync(requestUrl, content);
         }
 
+        public async Task LogException(string msg, string stackTrace, string jwt)
+        {
+            msg = "MOBILE ERROR: " + msg; stackTrace = "MOBILE ERROR: " + stackTrace; 
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            var requestUrl = COMMON_SERVICE_URI + "Logs?message=" + msg + "&stack=" + stackTrace;
+            var requestContent = new StringContent("Encoding.UTF8, application/json");
+            var response = await httpClient.PostAsync(requestUrl, requestContent);
+        }
     }
 
     public interface IMembers
@@ -1138,19 +853,24 @@ namespace sp_maui.Services
         Task<List<MemberProfileEducationModel>> GetMemberEducationInfo(int memberID, string jwtToken);
         Task<List<MemberProfileAboutModel>> GetMemberAboutInfo(int memberID, string jwtToken);
         Task<List<ContactsModel>> GetMyContacts(int memberID, String show, string jwtToken);
-        //Task<List<EventsModel>> GetMemberEventsInfo(int memberID, string jwtToken);
         Task<string> UpdateProfilePicture(int memberID, string fileName);
         Task<string> IsFriendByContactID(string memberID, string contactID, string jwtToken);
         Task<string> IsContactRequestSent(string memberID, string contactID, string jwtToken);
         Task SaveMemberGeneralInfo(string memberID, MemberProfileBasicInfoModel basicInfo, string jwtToken);
         Task SaveMemberContactInfo(string memberID, MemberProfileContactInfoModel contactInfo, string jwtToken);
         Task SaveMemberAboutData(string memberID, string aboutMe, string activities, string hobbies, string specialSkills, string jwtToken);
-
-        Task<string> ResetPassword(string email, string jwt);
-        Task<string> IsResetCodeExpired(string code, string jwt);
-        Task<string> ChangePassword(RegisterModel model, string jwt);
+        Task<string> ResetPassword(string email);
+        Task<string> IsResetCodeExpired(string code);
+        Task<string> ChangePassword(RegisterModel model);
         Task<string> SetMemberStatus(string MemberId,string status, string jwt);
         Task UpdateSchool(string memberId, MemberProfileEducationModel body, string jwt);
         Task UploadImage(string memberId, MultipartFormDataContent content, string jwt);
+        Task<List<YoutubePlayListModel>> GetMemberPlaylists(string memberID, string jwtToken);
+        Task RemoveSchool(string memberId, string schoolId, string instType, string jwt);
+        Task AddNewSchool(string memberId, MemberProfileEducationModel body, string jwt);
+        Task SaveChannelID(string memberID, string channelID, string jwt);
+        Task SaveInstagramURL(string memberID, string instagramURL, string jwt);
+        Task<List<YoutubeVideosListModel>> GetPlaylistVideos(string playListID, string jwtToken);
+        Task LogException(string msg, string stackTrace, string jwt);
     }
 }

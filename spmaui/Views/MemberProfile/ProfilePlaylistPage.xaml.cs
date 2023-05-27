@@ -1,21 +1,31 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Storage;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class ProfilePlaylistPage : ContentPage
 {
-	public ProfilePlaylistPage()
+    private readonly ProfilePlaylistViewModel _profilePlayListViewModel;
+
+    public ProfilePlaylistPage(ProfilePlaylistViewModel profilePlaylistViewModel)
 	{
 		InitializeComponent();
+
+        _profilePlayListViewModel = profilePlaylistViewModel;
+        this.BindingContext = profilePlaylistViewModel;
 
         string headerText = "";
         if (!String.IsNullOrEmpty(Preferences.Get("PlayListTitle","")))
             headerText = Preferences.Get("PlayListTitle","");
         lblHeader.Text = headerText;
+    }
+
+    async void OnReturnToPlaylist_Clicked(object sender, EventArgs e)
+    {
+        await Navigation.PopModalAsync();
     }
 
     async void OnCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -27,6 +37,6 @@ public partial class ProfilePlaylistPage : ContentPage
         var current = e.CurrentSelection;
         YoutubeVideosListModel nm = (YoutubeVideosListModel)current[0];
         Preferences.Set("YoutubeVideoID",nm.Id);
-        await Shell.Current.GoToAsync("playlistvideoplayer");
+        await Navigation.PushModalAsync(new ProfileVideoPlayerPage());
     }
 }

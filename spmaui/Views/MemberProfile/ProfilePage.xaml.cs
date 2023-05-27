@@ -1,28 +1,53 @@
 ﻿using System.Windows.Input;
 using Microsoft.Maui.Controls;
-using sp_maui.Models;
-using sp_maui.ViewModels;
+using spmaui.Models;
+using spmaui.Services;
+using spmaui.ViewModels;
 
-namespace sp_maui.Views;
+namespace spmaui.Views;
 
 public partial class ProfilePage : ContentPage
 {
-    public ProfilePage()
+    private readonly ProfileViewModel _profileViewModel;
+
+    public ProfilePage(ProfileViewModel profileViewModel)
     {
         InitializeComponent();
-        /*
-        Preferences.Set("UserID", obj.memberID);
-        Preferences.Set("UserEmail", obj.email);
-        Preferences.Set("UserName", obj.name);
-        Preferences.Set("UserTitle", obj.title);
-        Preferences.Set("AccessToken", obj.accessToken);
-
-        if (obj.picturePath != "")
-        {
-            Preferences.Set("UserImage", obj.picturePath);*/
-        imgProfile.Source = App.AppSettings.AppImagesURL + "/images/members/" + Preferences.Get("UserImage", "");
+        _profileViewModel = profileViewModel;
+        BindingContext = profileViewModel;
+        
+        Preferences.Set("ProfileLoginUser", "yes");
+        imgProfile.Source = App.AppSettings.AppMemberImagesURL + Preferences.Get("UserImage", "");
         lblName.Text = Preferences.Get("UserName", "");
         lblTitle.Text = Preferences.Get("UserTitle", "");
+    }
+
+
+    async void OnRefreshProfile_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var x = (ProfileViewModel)this.BindingContext;
+            x.IsRefreshing = true;
+            await x.GetMemberBasicInfo();
+            await x.GetMemberContactInfo();
+            await x.GetMemberEducation();
+            await x.GetPlayList();
+            this.BindingContext = x;
+            x.IsRefreshing = false;
+        }
+        catch (Exception ex)
+        {
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _profileViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
+        }
     }
 
     async void OnEducationSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -32,34 +57,43 @@ public partial class ProfilePage : ContentPage
         var current = e.CurrentSelection;
 
         MemberProfileEducationModel nm = (MemberProfileEducationModel)current[0];
-        await Launcher.OpenAsync(nm.schoolWebSite);
+        await Launcher.OpenAsync(nm.webSite);
         ((CollectionView)sender).SelectedItem = null;
-
-
-        //this.collectionView.SelectedItem = null;
-        //if (e.CurrentSelection.Count == 0)
-        //    return;
-        //var current = e.CurrentSelection;
-        //ContactsModel nm = (ContactsModel)current[0];
-
-        //Application.Current.Properties["ProfileID"] = nm.connectionID;
-        //Application.Current.Properties["ProfileName"] = nm.friendName;
-        //Application.Current.Properties["ProfileTitle"] = nm.titleDesc;
-        //Application.Current.Properties["ProfileImage"] = nm.picturePath;
-        //await Shell.Current.GoToAsync("profile");
     }
 
     async void OnPhotosButtonClicked(object sender, EventArgs args)
     {
-        var somevariablefromviewmodel = ((ProfileViewModel)BindingContext).ProfileContactInfo.Instagram;
-        string url = somevariablefromviewmodel;
-        if (String.IsNullOrEmpty(url))
+        try
         {
-            await DisplayAlert("Profile Settings", "The profiler instagram URL information not  provided!", "Ok");
+            var somevariablefromviewmodel = ((ProfileViewModel)BindingContext).ProfileContactInfo.Instagram;
+            string url = somevariablefromviewmodel;
+            Uri outUri;
+
+            if (String.IsNullOrEmpty(url))
+            {
+                await DisplayAlert("Profile Settings", "The profiler instagram URL information not  provided!", "Ok");
+            }
+            else if (Uri.TryCreate(url, UriKind.Absolute, out outUri)
+                && (outUri.Scheme == Uri.UriSchemeHttp || outUri.Scheme == Uri.UriSchemeHttps))
+            {
+                await Browser.OpenAsync(url);
+            }
+            else
+            {
+                await DisplayAlert("Profile Settings", "The profile instagram URL:" + url + " provided is not valid. Please go to edit profile and update your instagram URL.", "Ok");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await Browser.OpenAsync(url);
+            if (ex.GetType() == typeof(HttpRequestException))
+            {
+                await DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+            }
+            else
+            {
+                await DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                _profileViewModel.LogException(ex.Message, ex.StackTrace, "");
+            }
         }
     }
 
@@ -73,6 +107,6 @@ public partial class ProfilePage : ContentPage
 
         Preferences.Set("PlayListID", nm.Id);
         Preferences.Set("PlayListTitle", nm.Title);
-        await Shell.Current.GoToAsync("playlistvideos");
+        await Navigation.PushModalAsync(new ProfilePlaylistPage(new ProfilePlaylistViewModel(new Members())));
     }
 }

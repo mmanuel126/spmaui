@@ -1,5 +1,5 @@
 ﻿using System;
-namespace sp_maui.Models
+namespace spmaui.Models
 {
 
     public class SearchMessagesModel
@@ -40,6 +40,7 @@ namespace sp_maui.Models
         public string fromID { get; set; }
         public string firstName { get; set; }
         public string fullBody { get; set; }
+        public string senderTitle { get; set;}
     }
 
     public class MessageDetails
@@ -52,8 +53,6 @@ namespace sp_maui.Models
         public string Body { get; set; }
         public string Subject { get; set; }
     }
-
-
 
     public class SystemNotificationsModel
     {

@@ -1,26 +1,23 @@
 
-using Syncfusion.TreeView.Engine;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Input;
-using Xamarin.Forms;
-using Xamarin.Forms.Internals;
-using sp_mobile.Models;
+using spmaui.Models;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-using sp_mobile.Services;
+using spmaui.Services;
 using System.Collections.Generic;
-using sp_mobile.Views;
-using sp_mobile.Helper;
+using spmaui.Views;
+using spmaui.Helper;
+using TreeView.Maui;
+using TreeView.Maui.Core;
 
-namespace sp_mobile.ViewModels
+namespace spmaui.ViewModels
 {
-    
     public class PostsViewModel : INotifyPropertyChanged
     {
-
         public ICommand RefreshCommand { get; set; }
 
         bool isRefreshing;
@@ -31,7 +28,6 @@ namespace sp_mobile.ViewModels
             set
             {
                 isRefreshing = value;
-
                 RaisedOnPropertyChanged(nameof(IsRefreshing));
             }
         }
@@ -97,20 +93,36 @@ namespace sp_mobile.ViewModels
 
         public event EventHandler<ChatEventArgs> ConversationAdded;
 
-        private void OnRefreshCommandExecuted() => DoRefreshPosts();
+        private void OnRefreshCommandExecuted() => Task.Run(() => DoRefreshPosts());
 
         async Task DoRefreshPosts()
         {
-            Conversations.Clear();
-            Conversations = new ObservableCollection<Conversation>();
-            IsRefreshing = true;
-            this.Conversations = await this.GenerateConversations();
-            IsRefreshing = false;
+            try
+            {
+                IsRefreshing = true;
+                await Initialize();
+            }
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         protected virtual void OnConversationAdded(ChatEventArgs e)
         {
-            DoRefreshPosts();
+            Task.Run(() => DoRefreshPosts());
             EventHandler<ChatEventArgs> handler = ConversationAdded;
             handler?.Invoke(this, e);
         }
@@ -131,93 +143,111 @@ namespace sp_mobile.ViewModels
             handler?.Invoke(this, e);
         }
 
-        public PostsViewModel()
-        {
+        private readonly IMembers _membersSvc;
 
-            RefreshCommand = new Xamarin.Forms.Command(OnRefreshCommandExecuted);
+        public PostsViewModel(IMembers membersSvc)
+        {
+            _membersSvc = membersSvc;
+
+            RefreshCommand = new Command(OnRefreshCommandExecuted);
             NewConversationCommand = new Command(OnConversationAdding);
             Conversations = new ObservableCollection<Conversation>();
-            Initialize();
+            Task.Run(() => Initialize());
         }
 
         async Task Initialize()
         {
-            DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
             this.Conversations = await this.GenerateConversations();
             ReplyEditCommand = new Command(OnInitializeReply);
             ExpandActionCommand = new Command(OnExpandAction);
             NewReplyCommand = new Command(OnReplyConversation);
-            // hiding page progress...
-            DependencyService.Get<ILoadingPageService>().HideLoadingPage();
+            IsRefreshing = false;
         }
 
         private void OnReplyConversation(object sender)
         {
-            var treeViewNode = sender as TreeViewNode;
-            
-            var content = (IChatMessageInfo)treeViewNode.Content;
-            
-            Conversation conversation = null;
-            if (content is Conversation)
-            { 
-                conversation = (Conversation)content;
-            }
-            else if (content is Reply)
+            try
             {
-                conversation = (Conversation)treeViewNode.ParentNode.Content;
-            }
-            if (conversation != null && !string.IsNullOrWhiteSpace(content.ReplyMessage))
-            {
-                var replies = conversation.Replies;
+                var treeViewNode = sender as TreeViewNode;
 
-                string userName = Application.Current.Properties["UserName"].ToString();
-                string userImage = Application.Current.Properties["UserImage"].ToString();
-                string img = App.AppSettings.AppImagesURL + "images/members/default.png";
-                if (userImage != null || userImage != "")
-                {
-                    img = App.AppSettings.AppImagesURL + "images/members/" + userImage;
-                }
+                var content = (IChatMessageInfo)treeViewNode;
 
-                replies.Insert(replies.Count, new Reply
-                {
-                    Message = content.ReplyMessage,
-                    Date = DateTime.Now,
-                    Name = userName,
-                    ProfileIcon = img
-
-                }); ;
-
-                
-                var msg = content.ReplyMessage;
-                var pid = conversation.PostID;
-
-                //add it to database
-                Members svc = new Members();
-                string jwtToken = Application.Current.Properties["AccessToken"].ToString();
-                int memberID = 0;
-                if (Application.Current.Properties["UserID"].ToString() != null)
-                {
-                    memberID = Convert.ToInt32(Application.Current.Properties["UserID"].ToString());
-                }
-               
-                //refresh or display
-                conversation.Replies = replies;
-                content.IsInEditMode = false;
+                Conversation conversation = null;
                 if (content is Conversation)
-                    conversation.IsNeedExpand = true;
+                {
+                    conversation = (Conversation)content;
+                }
+                else if (content is Reply)
+                {
+                    conversation = (Conversation)treeViewNode.Children;
+                }
+                if (conversation != null && !string.IsNullOrWhiteSpace(content.ReplyMessage))
+                {
+                    var replies = conversation.Replies;
 
-                svc.SavePosts(memberID,pid, msg, jwtToken);
-                DoRefreshPosts();
+                    string userName = Preferences.Get("UserName", "");
+                    string userImage = Preferences.Get("UserImage", "");
+                    string img = App.AppSettings.AppMemberImagesURL + "default.png";
+                    if (userImage != null || userImage != "")
+                    {
+                        img = App.AppSettings.AppMemberImagesURL + userImage;
+                    }
 
-                OnReplyAdded(new ChatEventArgs() { ChatMessageItem = content, Conversation = conversation });
+                    replies.Insert(replies.Count, new Reply
+                    {
+                        Message = content.ReplyMessage,
+                        Date = DateTime.Now,
+                        Name = userName,
+                        ProfileIcon = img
+
+                    });
+
+                    var msg = content.ReplyMessage;
+                    var pid = conversation.PostID;
+
+                    //add it to database
+                    string jwtToken = Preferences.Get("AccessToken", "");
+                    int memberID = 0;
+                    if (Preferences.Get("UserID", "") != null)
+                    {
+                        memberID = Convert.ToInt32(Preferences.Get("UserID", ""));
+                    }
+
+                    //refresh or display
+                    conversation.Replies = replies;
+                    content.IsInEditMode = false;
+                    if (content is Conversation)
+                        conversation.IsNeedExpand = true;
+
+                    _membersSvc.SavePosts(memberID, pid, msg, jwtToken);
+                    Task.Run(() => DoRefreshPosts());
+
+                    OnReplyAdded(new ChatEventArgs() { ChatMessageItem = content, Conversation = conversation });
+                }
+                content.ReplyMessage = null;
             }
-            content.ReplyMessage = null;
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         private void OnExpandAction(object sender)
         {
             var node = sender as TreeViewNode;
-            node.IsExpanded = !node.IsExpanded;
+            node.IsExtended = !node.IsExtended;
         }
 
         private void ResetEditMode()
@@ -243,7 +273,7 @@ namespace sp_mobile.ViewModels
 
         private void OnInitializeReply(object sender)
         {
-            var content = (sender as TreeViewNode).Content;
+            var content = (sender as TreeViewNode).Children;
             this.ResetEditMode();
             if (content is Conversation)
             {
@@ -275,102 +305,128 @@ namespace sp_mobile.ViewModels
 
         private void OnConversationAdding()
         {
-            PostsViewModel  instance = this;
-            if (!string.IsNullOrWhiteSpace(instance.ConversationMessage))
+            try
             {
-                string userName = Application.Current.Properties["UserName"].ToString();
-                string userImage = Application.Current.Properties["UserImage"].ToString();
-                string img = App.AppSettings.AppImagesURL + "images/members/default.png";
-                if (userImage != null || userImage != "")
+                PostsViewModel instance = this;
+                if (!string.IsNullOrWhiteSpace(instance.ConversationMessage))
                 {
-                    img = App.AppSettings.AppImagesURL + "images/members/" + userImage;
-                }
-               
-                Conversation conversation = new Conversation
-                {
-                     
-                    Message = instance.ConversationMessage,
-                    Date = DateTime.Now,
-                    Name = userName,
-                    ProfileIcon = img,
-                    //TextColor = Color.FromHex("#f23518")
-                };
+                    string userName = Preferences.Get("UserName", "");
+                    string userImage = Preferences.Get("UserImage", "");
+                    string img = App.AppSettings.AppMemberImagesURL + "default.png";
+                    if (userImage != null || userImage != "")
+                    {
+                        img = App.AppSettings.AppMemberImagesURL + userImage;
+                    }
 
-                //add to database
-                Members svc = new Members();
-                string jwtToken = Application.Current.Properties["AccessToken"].ToString();
-                int memberID = 0;
-                if (Application.Current.Properties["UserID"].ToString() != null)
-                {
-                    memberID = Convert.ToInt32(Application.Current.Properties["UserID"].ToString());
+                    Conversation conversation = new Conversation
+                    {
+                        Message = instance.ConversationMessage,
+                        Date = DateTime.Now,
+                        Name = userName,
+                        ProfileIcon = img
+                    };
+
+                    //add to database
+                    string jwtToken = Preferences.Get("AccessToken", "");
+                    int memberID = 0;
+                    if (Preferences.Get("UserID", "") != null)
+                    {
+                        memberID = Convert.ToInt32(Preferences.Get("UserID", ""));
+                    }
+                    _membersSvc.SavePosts(memberID, 0, conversation.Message, jwtToken);
+
+                    //add to current UI instance
+                    OnConversationAdded(new ChatEventArgs() { Conversation = conversation });
+                    Task.Run(() => DoRefreshPosts());
                 }
-                svc.SavePosts(memberID,0,conversation.Message, jwtToken);
-                DoRefreshPosts();
-                
-                //add to current UI instance
-                //  instance.Conversations.Add(conversation);
-                OnConversationAdded(new ChatEventArgs() { Conversation = conversation });
+                instance.ConversationMessage = null;
             }
-            instance.ConversationMessage = null;
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+            }
         }
 
         public async Task<ObservableCollection<Conversation>> GenerateConversations()
         {
-            Members svc = new Members();
-            string jwtToken = Application.Current.Properties["AccessToken"].ToString();
-            int memberID = 0;
-            if (Application.Current.Properties["UserID"].ToString() != null)
-                memberID = Convert.ToInt32(Application.Current.Properties["UserID"].ToString());
-
-
-            // show the loading page...
-           // DependencyService.Get<ILoadingPageService>().ShowLoadingPage();
-
-            List<RecentPostsModel> result = await svc.GetRecentPosts(memberID, jwtToken);
-
-            // show the loading page...
-            //DependencyService.Get<ILoadingPageService>().HideLoadingPage();
-
-            var conversationList = new ObservableCollection<Conversation>();
-
-            if (result != null)
+            try
             {
-                //Conversation conv = new Conversation();
-                foreach (var r in result)
+                string jwtToken = Preferences.Get("AccessToken", "");
+                int memberID = 0;
+                if (Preferences.Get("UserID", "") != null)
+                    memberID = Convert.ToInt32(Preferences.Get("UserID", ""));
+
+                List<RecentPostsModel> result = await _membersSvc.GetRecentPosts(memberID, jwtToken);
+
+                var conversationList = new ObservableCollection<Conversation>();
+
+                if (result != null)
                 {
-                    string img = App.AppSettings.AppImagesURL + "images/members/default.png";
-                    if (r.picturePath != null || r.picturePath != "")
+                    foreach (var r in result)
                     {
-                        img = App.AppSettings.AppImagesURL + "images/members/" + r.picturePath;
-                    }
-
-                    var conv = new Conversation() { Name = r.memberName, Message = r.description, Date = Convert.ToDateTime(r.datePosted), ProfileIcon = img, IsNeedExpand = false, PostID=Convert.ToInt32(r.postID) };
-                    if (conv != null)
-                    {
-                        //get children for post
-                        List<RecentPostChildModel> cResult = await svc.GetChildPosts(Convert.ToInt32(r.postID), jwtToken);
-                        if (cResult != null)
+                        string img = App.AppSettings.AppMemberImagesURL + "default.png";
+                        if (r.picturePath != null || r.picturePath != "")
                         {
-                            if (cResult.Count != 0)
-                                conv.IsNeedExpand = true;
+                            img = App.AppSettings.AppMemberImagesURL  + r.picturePath;
+                        }
 
-                            foreach (var c in cResult)
+                        var conv = new Conversation() { Name = r.memberName, Message = r.description, Date = Convert.ToDateTime(r.datePosted), ProfileIcon = img, IsNeedExpand = true, IsExtended = true, PostID = Convert.ToInt32(r.postID) };
+                        if (conv != null)
+                        {
+                            //get children for post
+                            List<RecentPostChildModel> cResult = await _membersSvc.GetChildPosts(Convert.ToInt32(r.postID), jwtToken);
+                            if (cResult != null)
                             {
-                                string img2 = App.AppSettings.AppImagesURL + "images/members/default.png";
-                                if (c.picturePath != null || c.picturePath != "")
+                                if (cResult.Count != 0)
+                                    conv.IsNeedExpand = true;
+
+                                foreach (var c in cResult)
                                 {
-                                    img2 = App.AppSettings.AppImagesURL + "images/members/" + c.picturePath;
+                                    string img2 = App.AppSettings.AppMemberImagesURL + "default.png";
+                                    if (c.picturePath != null || c.picturePath != "")
+                                    {
+                                        img2 = App.AppSettings.AppMemberImagesURL +  c.picturePath;
+                                    }
+                                    conv.Replies.Add(new Reply() { Name = c.memberName, Message = c.description, Date = Convert.ToDateTime(c.dateResponded), ProfileIcon = img2, PostID = Convert.ToInt32(r.postID) });
+                                    conv.Children.Add(new Conversation() { Name = c.memberName, Message = c.description, Date = Convert.ToDateTime(c.dateResponded), ProfileIcon = img2, PostID = Convert.ToInt32(r.postID) });
                                 }
-                                conv.Replies.Add(new Reply() { Name = c.memberName, Message = c.description, Date = Convert.ToDateTime(c.dateResponded), ProfileIcon = img2, PostID=Convert.ToInt32 (r.postID )});
                             }
                         }
 
+                        conversationList.Add(conv);
                     }
-                    
-                    conversationList.Add(conv);
                 }
+                return conversationList;
             }
-            return conversationList;
+            catch (Exception ex)
+            {
+                IsRefreshing = false;
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    if (ex.GetType() == typeof(HttpRequestException))
+                    {
+                        await App.Current.MainPage.DisplayAlert("Network Error...", "Error accessing network or services. Check internet connection and then try again.", "Ok");
+                    }
+                    else
+                    {
+                        await App.Current.MainPage.DisplayAlert(" General Error...", "A general error occured while you were using the application. The error has been logged and recorded for a specialist to look at. Try again in a bit later.", "Ok");
+                        await _membersSvc.LogException(ex.Message, ex.StackTrace, "");
+                    }
+                });
+                return null;
+            }
         }
     }
 

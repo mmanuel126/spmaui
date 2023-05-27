@@ -6,7 +6,7 @@
 
      <AbsoluteLayout>
         
-        <StackLayout Padding="0,0,0, 0" HorizontalOptions="CenterAndExpand" Orientation="Vertical"
+        <StackLayout Padding="0,13,0, 0" HorizontalOptions="CenterAndExpand" Orientation="Vertical"
             AbsoluteLayout.LayoutBounds="0,0,1,1"
             AbsoluteLayout.LayoutFlags="All">
 
@@ -17,7 +17,7 @@
 
                     <Label x:Name="lblInstruction" Text="Create Account below!" 
                       HorizontalTextAlignment="Center" FontAttributes="Bold"  Padding="20,10,20,5" 
-                      TextColor="{StaticResource Gray500}" FontSize="17"/>
+                      TextColor="{StaticResource Gray900}" FontSize="17"/>
 
                 <StackLayout                
                     Grid.Row="2"
@@ -28,46 +28,46 @@
                     <StackLayout HorizontalOptions="Center" Spacing="1">
                         <Entry 
                         Text="" Placeholder="Enter first name..."
-                        Keyboard="Email" x:Name="FirstName" PlaceholderColor="{StaticResource Gray400}"
+                        Keyboard="Email" x:Name="FirstName" PlaceholderColor="{StaticResource Gray500}"
                         WidthRequest="300" />
                     </StackLayout>
 
                     <StackLayout HorizontalOptions="Center" Spacing="1">
                         <Entry x:Name="LastName"
-                        Text="" Placeholder="Enter last name..." PlaceholderColor="{StaticResource Gray400}"
+                        Text="" Placeholder="Enter last name..." PlaceholderColor="{StaticResource Gray500}"
                         WidthRequest="300" 
                          />
                     </StackLayout>
 
                     <StackLayout HorizontalOptions="Center" Spacing="1">
                         <Entry x:Name="Email"
-                        Text="" Placeholder="Enter email..." PlaceholderColor="{StaticResource Gray400}"
+                        Text="" Placeholder="Enter email..." PlaceholderColor="{StaticResource Gray500}"
                         WidthRequest="300" 
                         Keyboard="Email" />
                     </StackLayout>
 
                     <StackLayout HorizontalOptions="Center" Spacing="1">
                         <Entry x:Name="Pwd" IsTextPredictionEnabled="False"
-                        Text="" Placeholder="Enter password..." PlaceholderColor="{StaticResource Gray400}"
+                        Text="" Placeholder="Enter password..." PlaceholderColor="{StaticResource Gray500}"
                         WidthRequest="300"  Keyboard="Text"
                         IsPassword="True" />
                     </StackLayout>
 
                     <StackLayout HorizontalOptions="Center" Spacing="1">
                         <Entry x:Name="PwdReEntered"
-                        Text="" Placeholder="Enter password again..." PlaceholderColor="{StaticResource Gray400}"
+                        Text="" Placeholder="Enter password again..." PlaceholderColor="{StaticResource Gray500}"
                         WidthRequest="300" 
                         IsPassword="True" />
                     </StackLayout>
 
-                        <Picker x:Name="Gender" HorizontalOptions="FillAndExpand"  TitleColor="{StaticResource Gray400}"  Title="Tap to select gender...">
+                        <Picker x:Name="Gender" HorizontalOptions="FillAndExpand"  TitleColor="{StaticResource Gray500}"  Title="Tap here to select gender...">
                         <!--Picker.Items>
                             <x:String>Male</x:String>
                             <x:String>Female</x:String>
                         </Picker.Items -->
                     </Picker>
 
-                        <Picker x:Name="ProfileType" HorizontalOptions="FillAndExpand" TitleColor="{StaticResource Gray400}" Title="Tap to select profile type...">
+                        <Picker x:Name="ProfileType" HorizontalOptions="FillAndExpand" TitleColor="{StaticResource Gray500}" Title="Tap here to select profile type...">
                         <!-- Picker.Items>
                             <x:String>Agent</x:String>
                             <x:String>Athlete (Amateur)</x:String>
@@ -83,8 +83,8 @@
                     </Picker>
 
                     <StackLayout HorizontalOptions="StartAndExpand" Spacing="1">
-                        <Label  TextColor="DarkOliveGreen"
-                        Text="Tap date to select birth date:" />
+                        <Label  TextColor="{StaticResource Gray500}"
+                        Text="Tap date below to select birth date:" />
                         <DatePicker MinimumDate="01/01/1800" x:Name="BirthDate"
                        MaximumDate="12/31/2900"
                     />
